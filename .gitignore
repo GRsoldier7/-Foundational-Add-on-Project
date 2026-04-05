@@ -1,0 +1,27 @@
+# Claude Code local settings (machine-specific, not shared)
+.claude/settings.local.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Secrets (never commit)
+.env
+.env.*
+credentials*.json
+**/secrets.json
+**/secrets.yaml
+**/*-secret.json
+**/*-password.json
+**/*-token.json
+
+# Memory (session-specific)
+.memory/

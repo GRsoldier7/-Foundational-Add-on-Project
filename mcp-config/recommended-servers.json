@@ -1,0 +1,128 @@
+{
+  "_comment": "Recommended MCP servers for the Foundation AddOn. Copy relevant entries into your project's .mcp.json or ~/.claude.json",
+  "_tiers": {
+    "tier1_core": "Install first — zero API keys, universal value",
+    "tier2_enhanced": "High value, some need free API keys",
+    "tier3_specialist": "Domain-specific power tools"
+  },
+  "mcpServers": {
+    "_tier1_core": "=== TIER 1: ABSOLUTE CORE (install these first) ===",
+
+    "context7": {
+      "_why": "Fetches up-to-date, version-specific docs for any library. Eliminates hallucinated API syntax. Add 'use context7' to any prompt.",
+      "_install": "npx -y @upstash/context7-mcp@latest",
+      "_api_key": false,
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+
+    "filesystem": {
+      "_why": "Sandboxed file operations scoped to allowed directories. 14 tools for read/write/search/move.",
+      "_install": "npx -y @modelcontextprotocol/server-filesystem <allowed-dirs>",
+      "_api_key": false,
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/your/project"]
+    },
+
+    "git": {
+      "_why": "Native git operations — status, diffs, commits, branches, log. No shell required.",
+      "_install": "uvx mcp-server-git",
+      "_api_key": false,
+      "command": "uvx",
+      "args": ["mcp-server-git", "--repository", "/path/to/your/project"]
+    },
+
+    "playwright": {
+      "_why": "Browser automation via accessibility tree. Navigate, click, fill forms, capture screenshots. Official Microsoft implementation.",
+      "_install": "npx -y @playwright/mcp@latest",
+      "_api_key": false,
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+
+    "memory": {
+      "_why": "Persistent knowledge graph as JSONL. Remembers decisions, preferences, conventions across sessions.",
+      "_install": "npx -y @modelcontextprotocol/server-memory",
+      "_api_key": false,
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"],
+      "env": {
+        "MEMORY_FILE_PATH": "/path/to/your/project/.memory/knowledge-graph.jsonl"
+      }
+    },
+
+    "fetch": {
+      "_why": "Lightweight URL fetcher — converts HTML to clean markdown. Zero API keys.",
+      "_install": "uvx mcp-server-fetch",
+      "_api_key": false,
+      "command": "uvx",
+      "args": ["mcp-server-fetch"]
+    },
+
+    "sequential-thinking": {
+      "_why": "Structured problem-solving — numbered steps, revision, branching. Prevents jumping to conclusions on hard problems.",
+      "_install": "npx -y @modelcontextprotocol/server-sequential-thinking",
+      "_api_key": false,
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+    },
+
+    "_tier2_enhanced": "=== TIER 2: HIGH-VALUE ENHANCED (some need API keys) ===",
+
+    "github": {
+      "_why": "Full GitHub integration — PRs, issues, Actions, code search, Dependabot alerts.",
+      "_install": "Docker: ghcr.io/github/github-mcp-server OR remote: https://api.githubcopilot.com/mcp/",
+      "_api_key": "GITHUB_PERSONAL_ACCESS_TOKEN",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "<your-token>"
+      }
+    },
+
+    "tavily": {
+      "_why": "AI-optimized web search + page extraction + site mapping. Purpose-built for developer queries.",
+      "_install": "npx -y tavily-mcp@latest OR remote: https://mcp.tavily.com/mcp/",
+      "_api_key": "TAVILY_API_KEY (free tier available)",
+      "command": "npx",
+      "args": ["-y", "tavily-mcp@latest"],
+      "env": {
+        "TAVILY_API_KEY": "<your-key>"
+      }
+    },
+
+    "postgres": {
+      "_why": "Direct SQL execution, schema inspection, query debugging against PostgreSQL.",
+      "_install": "pip install postgres-mcp",
+      "_api_key": false,
+      "command": "uvx",
+      "args": ["postgres-mcp", "postgresql://user:pass@localhost:5432/dbname"]
+    },
+
+    "_tier3_specialist": "=== TIER 3: SPECIALIST POWER TOOLS ===",
+
+    "docker": {
+      "_why": "Container lifecycle management — build, run, inspect, manage containers.",
+      "_install": "github.com/docker/docker-mcp",
+      "_api_key": false
+    },
+
+    "sentry": {
+      "_why": "Error tracking — retrieves stack traces, error frequencies, proposes fixes using repo context.",
+      "_install": "docs.sentry.io/product/sentry-mcp/",
+      "_api_key": "SENTRY_AUTH_TOKEN"
+    },
+
+    "firecrawl": {
+      "_why": "Advanced web scraping with JS rendering. Handles SPAs and dynamic sites that fetch can't.",
+      "_install": "npx -y firecrawl-mcp",
+      "_api_key": "FIRECRAWL_API_KEY"
+    },
+
+    "qdrant": {
+      "_why": "Vector storage and semantic retrieval for RAG. Long-term semantic memory beyond keyword search.",
+      "_install": "github.com/qdrant/mcp-server-qdrant",
+      "_api_key": false
+    }
+  }
+}
