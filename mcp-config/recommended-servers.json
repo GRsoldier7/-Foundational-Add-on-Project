@@ -1,5 +1,6 @@
 {
   "_comment": "Recommended MCP servers for the Foundation AddOn. Copy relevant entries into your project's .mcp.json or ~/.claude.json",
+  "_WARNING": "NEVER commit .mcp.json with real credentials. Add .mcp.json to your project's .gitignore.",
   "_tiers": {
     "tier1_core": "Install first — zero API keys, universal value",
     "tier2_enhanced": "High value, some need free API keys",
@@ -95,8 +96,12 @@
       "_why": "Direct SQL execution, schema inspection, query debugging against PostgreSQL.",
       "_install": "pip install postgres-mcp",
       "_api_key": false,
+      "_WARNING": "NEVER hardcode credentials in args. Use DATABASE_URL env var instead.",
       "command": "uvx",
-      "args": ["postgres-mcp", "postgresql://user:pass@localhost:5432/dbname"]
+      "args": ["postgres-mcp"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      }
     },
 
     "_tier3_specialist": "=== TIER 3: SPECIALIST POWER TOOLS ===",

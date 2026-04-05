@@ -16,12 +16,28 @@ __pycache__/
 # Secrets (never commit)
 .env
 .env.*
+.env.local
+.env.*.local
 credentials*.json
 **/secrets.json
 **/secrets.yaml
 **/*-secret.json
 **/*-password.json
 **/*-token.json
+**/service-account*.json
+*.pem
+*.key
+*.p12
+*.pfx
+*_rsa
+*_ecdsa
+*_ed25519
+.npmrc
+.pypirc
+
+# MCP config (may contain credentials)
+.mcp.json
+mcp.json
 
 # Memory (session-specific)
 .memory/
