@@ -1,0 +1,129 @@
+# Vaultwarden + Caddy stack — production-grade self-hosted password manager
+#
+# Architecture:
+#   - Vaultwarden: Bitwarden-compatible server (Rust, lightweight)
+#   - Caddy: Reverse proxy with automatic HTTPS
+#   - Internal Docker network — only Caddy is exposed
+#   - Persistent named volumes — survive container recreation
+#
+# Before first run:
+#   1. Copy .env.example to .env and fill in secrets
+#   2. Generate ADMIN_TOKEN: openssl rand -base64 48
+#   3. Hash it with: docker run --rm -it vaultwarden/server /vaultwarden hash
+#   4. Choose deployment mode in Caddyfile (LAN-only / Tailscale / public domain)
+#   5. Run: docker compose up -d
+#   6. Create your first user via the web UI
+#   7. Set SIGNUPS_ALLOWED=false in .env and restart: docker compose up -d
+
+services:
+  vaultwarden:
+    image: vaultwarden/server:1.32.5-alpine  # Pin version for reproducibility
+    container_name: vaultwarden
+    restart: unless-stopped
+    user: "1000:1000"  # Run as non-root
+    networks:
+      - vault-internal
+    volumes:
+      - vw-data:/data
+    environment:
+      # === Core ===
+      DOMAIN: ${VW_DOMAIN}                       # e.g. https://vault.lan or https://vault.example.com
+      SIGNUPS_ALLOWED: ${VW_SIGNUPS_ALLOWED:-false}
+      INVITATIONS_ALLOWED: ${VW_INVITATIONS_ALLOWED:-false}
+      SHOW_PASSWORD_HINT: "false"
+
+      # === Admin Panel ===
+      # Argon2-hashed token (NEVER use plain token in production)
+      ADMIN_TOKEN: ${VW_ADMIN_TOKEN}
+
+      # === Security Hardening ===
+      # PBKDF2 iterations — Vaultwarden default is 600,000 (matches Bitwarden 2023+)
+      PASSWORD_ITERATIONS: "600000"
+      # Argon2 password hashing for the master password (stronger than PBKDF2)
+      PASSWORD_HINTS_ALLOWED: "false"
+      # Disable web vault if you only use clients (reduces attack surface)
+      WEB_VAULT_ENABLED: "true"
+
+      # === Rate Limiting (built-in brute force protection) ===
+      LOGIN_RATELIMIT_SECONDS: "60"
+      LOGIN_RATELIMIT_MAX_BURST: "10"
+      ADMIN_RATELIMIT_SECONDS: "300"
+      ADMIN_RATELIMIT_MAX_BURST: "3"
+
+      # === Sessions ===
+      # Force re-auth after 30 days of inactivity
+      EXTENDED_LOGGING: "true"
+      LOG_FILE: "/data/vaultwarden.log"
+      LOG_LEVEL: "warn"
+
+      # === WebSocket (live sync between clients) ===
+      WEBSOCKET_ENABLED: "true"
+
+      # === Email (optional — required for password reset / 2FA recovery) ===
+      # Uncomment and configure if you want email notifications
+      # SMTP_HOST: ${SMTP_HOST}
+      # SMTP_FROM: ${SMTP_FROM}
+      # SMTP_PORT: "587"
+      # SMTP_SECURITY: "starttls"
+      # SMTP_USERNAME: ${SMTP_USERNAME}
+      # SMTP_PASSWORD: ${SMTP_PASSWORD}
+
+      # === Pushed Notifications (mobile) ===
+      # Requires Bitwarden push relay registration — leave disabled for LAN-only
+      PUSH_ENABLED: "false"
+
+      # === Backups (sends DB snapshots to /data/backups daily via cron in container) ===
+      # Note: This is in addition to the host-side backup script
+      BACKUP_DIR: "/data/backups"
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/alive"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    read_only: false  # Vaultwarden writes to /data — cannot be fully read-only
+    tmpfs:
+      - /tmp
+
+  caddy:
+    image: caddy:2.8-alpine  # Pin version
+    container_name: vaultwarden-caddy
+    restart: unless-stopped
+    networks:
+      - vault-internal
+    ports:
+      - "80:80"    # ACME HTTP-01 challenge (only needed for public domain)
+      - "443:443"  # HTTPS
+      - "443:443/udp"  # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    environment:
+      VW_DOMAIN: ${VW_DOMAIN}
+      VW_DOMAIN_HOST: ${VW_DOMAIN_HOST}
+    depends_on:
+      vaultwarden:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE  # Required to bind ports 80/443
+
+networks:
+  vault-internal:
+    driver: bridge
+    internal: false  # Caddy needs egress for ACME (set true if using internal CA only)
+
+volumes:
+  vw-data:
+    driver: local
+  caddy-data:
+    driver: local
+  caddy-config:
+    driver: local

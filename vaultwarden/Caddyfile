@@ -1,0 +1,93 @@
+# Caddyfile for Vaultwarden — choose ONE deployment mode below
+#
+# Caddy automatically:
+#   - Provisions HTTPS certificates (Let's Encrypt for public, internal CA for LAN)
+#   - Renews them before expiry
+#   - Redirects HTTP → HTTPS
+#   - Serves HTTP/3 (QUIC) for performance
+#
+# For more, see: https://caddyserver.com/docs/
+
+# ============================================================================
+# MODE 1: LAN-ONLY with Caddy's internal CA (RECOMMENDED for homelab)
+# ============================================================================
+# Use this if Vaultwarden is only accessed inside your home network or via VPN
+# (Tailscale, WireGuard). Caddy generates a local CA cert that you install on
+# your devices ONCE — then HTTPS works without exposing anything to the internet.
+#
+# Set VW_DOMAIN_HOST=vault.lan in .env
+{$VW_DOMAIN_HOST} {
+    tls internal
+
+    encode gzip zstd
+
+    # WebSocket for live sync
+    reverse_proxy /notifications/hub vaultwarden:3012
+
+    # Everything else
+    reverse_proxy vaultwarden:80 {
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "same-origin"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://icons.bitwarden.net; connect-src 'self' wss:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'"
+        -Server
+    }
+
+    log {
+        output file /data/access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+        format json
+        level WARN
+    }
+}
+
+# ============================================================================
+# MODE 2: PUBLIC DOMAIN with Let's Encrypt (uncomment if exposing to internet)
+# ============================================================================
+# WARNING: Only do this if you also use:
+#   - A strong admin token (Argon2-hashed)
+#   - 2FA on every account
+#   - Fail2ban or Vaultwarden's built-in rate limiting (already configured)
+#   - Regular updates
+#
+# Better alternative: Run LAN-only and access via Tailscale from anywhere.
+#
+# Uncomment the block below and set VW_DOMAIN_HOST=vault.example.com in .env
+#
+# {$VW_DOMAIN_HOST} {
+#     encode gzip zstd
+#     reverse_proxy /notifications/hub vaultwarden:3012
+#     reverse_proxy vaultwarden:80 {
+#         header_up X-Real-IP {remote_host}
+#         header_up X-Forwarded-For {remote_host}
+#         header_up X-Forwarded-Proto {scheme}
+#     }
+#     header {
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+#         X-Content-Type-Options "nosniff"
+#         X-Frame-Options "DENY"
+#         Referrer-Policy "same-origin"
+#         Permissions-Policy "geolocation=(), microphone=(), camera=()"
+#         Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://icons.bitwarden.net; connect-src 'self' wss:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'"
+#         -Server
+#     }
+#     log {
+#         output file /data/access.log {
+#             roll_size 10mb
+#             roll_keep 5
+#         }
+#         format json
+#         level WARN
+#     }
+# }

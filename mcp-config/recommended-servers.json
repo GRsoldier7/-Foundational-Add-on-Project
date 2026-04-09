@@ -104,6 +104,27 @@
       }
     },
 
+    "bitwarden": {
+      "_why": "Secure credential retrieval from your self-hosted Vaultwarden instance. Lets Claude access dev secrets without exposing them in files, env vars, or chat. Use a SCOPED dev account/org — never your personal vault.",
+      "_install": "npm install -g @bitwarden/mcp-server (or use bw CLI directly)",
+      "_api_key": false,
+      "_security_notes": [
+        "REQUIRES separate dev vault account or organization — see vaultwarden/VAULT_ORGANIZATION.md",
+        "Session token (BW_SESSION) is short-lived — locks when shell exits",
+        "Configure bw CLI to point at your Vaultwarden: bw config server https://vault.lan",
+        "Login: bw login your-dev-account@email.com",
+        "Unlock: export BW_SESSION=$(bw unlock --raw)",
+        "MCP server reads from BW_SESSION env var — never stores credentials on disk",
+        "Combine with the .claude/settings.json deny rules to prevent vault dumping via prompt injection"
+      ],
+      "command": "npx",
+      "args": ["-y", "@bitwarden/mcp-server"],
+      "env": {
+        "BW_SESSION": "${BW_SESSION}",
+        "BW_SERVER": "${BW_SERVER:-https://vault.lan}"
+      }
+    },
+
     "_tier3_specialist": "=== TIER 3: SPECIALIST POWER TOOLS ===",
 
     "docker": {

@@ -113,6 +113,32 @@ See `mcp-config/recommended-servers.json` for the full configuration. Priority i
 
 Servers 1-7 require zero API keys and provide immediate value on any project.
 
+## Credential Management
+
+This project includes a self-hosted Vaultwarden stack at [vaultwarden/](vaultwarden/). It provides:
+
+- **Production-grade docker-compose** — Vaultwarden + Caddy reverse proxy with auto HTTPS
+- **Hardened defaults** — Argon2 admin token, rate limiting, non-root containers, dropped capabilities, security headers
+- **Encrypted backups** — `age`-encrypted snapshots via [vaultwarden/scripts/backup.sh](vaultwarden/scripts/backup.sh)
+- **Vault organization guide** — Personal vs dev separation in [vaultwarden/VAULT_ORGANIZATION.md](vaultwarden/VAULT_ORGANIZATION.md)
+- **Bitwarden MCP integration** — See `bitwarden` entry in [mcp-config/recommended-servers.json](mcp-config/recommended-servers.json)
+
+### Credential Access Pattern
+
+NEVER store credentials in:
+- `.claude/settings.json` (committed to git)
+- `CLAUDE.md` (committed to git)
+- Any project file checked into version control
+- Chat messages or tool outputs
+
+ALWAYS retrieve credentials via:
+1. **`bw` CLI** — `bw get password "GitHub PAT"` (after `bw unlock`)
+2. **`gh auth login`** — for GitHub specifically (uses OS keychain)
+3. **Environment variables** sourced from `~/.zshrc` or per-project `.env` (gitignored)
+4. **Bitwarden MCP server** — when Claude needs structured access to dev secrets
+
+The Bitwarden MCP server should only be configured to access a **scoped dev vault** (separate account or organization) — never your personal vault. See `vaultwarden/VAULT_ORGANIZATION.md` for the recommended structure.
+
 ---
 
 ## Operating Principles

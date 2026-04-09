@@ -41,3 +41,11 @@ mcp.json
 
 # Memory (session-specific)
 .memory/
+
+# Vaultwarden runtime data (NEVER commit)
+vaultwarden/.env
+vaultwarden/vw-data/
+vaultwarden/caddy-data/
+vaultwarden/caddy-config/
+vaultwarden/backups/
+vaultwarden/*.log
