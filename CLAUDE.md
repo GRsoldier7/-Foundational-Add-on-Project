@@ -13,26 +13,37 @@ This project is a **workspace addon** designed to be included alongside any othe
 This addon ships with **60+ specialist skills** organized into six tiers. The `adaptive-skill-orchestrator` automatically selects and parallelizes the optimal skill combination for every request — no manual routing required.
 
 ### Always-On Meta-Layer (activate silently on every response)
-- `anti-hallucination` — Confidence tiers (VERIFIED/LIKELY/UNCERTAIN/UNKNOWN), context drift prevention, re-grounding procedures
-- `prompt-amplifier` — Silently optimizes every prompt before execution (silent + show modes)
+- `anti-hallucination` — Confidence tiers (VERIFIED/LIKELY/UNCERTAIN/UNKNOWN), context drift prevention, security/architecture claim verification
+- `prompt-amplifier` — Silently optimizes every prompt (8 layers including reasoning transparency + security awareness)
 - `session-optimizer` — Context window management; activates proactively at 40%+ context fill
 - `verification-before-completion` — Evidence before claims; runs before any completion declaration
+- **`solution-architect-engine`** — Future-proofing checklist on every design decision (SOLID, 12-factor, scalability, ADRs)
+- **`secure-by-design`** — Security DNA layer: zero-trust, least privilege, input validation on every code output
+- **`context-guardian`** — 60% context watchdog: AMBER mode at 60%, RED mode at 80%, anti-hallucination escalation
+- **`efficiency-engine`** — Maximum information density per token, zero waste, zero quality loss
+- **`cognitive-excellence`** — Peak reasoning quality, synergistic skill activation, quality ratchet (never degrade)
 
 ### Core Skills (`skills/core/`)
 | Skill | Purpose | Trigger |
 |-------|---------|---------|
-| **adaptive-skill-orchestrator** | AUTO-selects + parallelizes best skills for any request; self-optimizing | AUTO on every non-trivial request — supersedes master-orchestrator |
+| **adaptive-skill-orchestrator** | AUTO-selects + parallelizes best skills; security/architecture gates | AUTO on every non-trivial request |
+| **solution-architect-engine** | Future-proofing, SOLID, 12-factor, scalability, ADRs | ALWAYS ON for design decisions |
+| **secure-by-design** | Zero-trust, least privilege, input validation, security DNA | ALWAYS ON for all code |
+| **context-guardian** | 60% AMBER / 80% RED watchdog, anti-hallucination escalation | ALWAYS ON, monitors context |
+| **efficiency-engine** | Max info density per token, zero waste, zero quality loss | ALWAYS ON |
+| **cognitive-excellence** | Peak reasoning, synergistic skill activation, quality ratchet | ALWAYS ON |
+| **anti-hallucination** | Confidence tiers, security/architecture claim verification | ALWAYS ON |
+| **prompt-amplifier** | 8-layer silent prompt optimization (incl. reasoning + security) | ALWAYS ON |
+| **session-optimizer** | Context window management, security/arch checkpoints | AUTO at 40%+ context |
+| **verification-before-completion** | Evidence before claims | AUTO before completion |
 | **master-orchestrator** | Static routing table fallback | Explicit `/master-orchestrator` |
-| **skill-builder** | Creates, audits, and improves skills (5-module pipeline) | `/skill-builder`, "create a skill", "audit this skill" |
-| **skill-amplifier** | 8-pass optimization of any SKILL.md | `/skill-amplifier`, "optimize this skill", "amplify" |
-| **anti-hallucination** | Context drift prevention, confidence tiers | ALWAYS ON |
-| **prompt-amplifier** | Silent prompt optimization | ALWAYS ON |
-| **session-optimizer** | Context window and session management | AUTO at 40%+ context |
+| **skill-builder** | Creates, audits, and improves skills (5-module pipeline) | `/skill-builder`, "create a skill" |
+| **skill-amplifier** | 8-pass optimization of any SKILL.md | `/skill-amplifier`, "optimize this skill" |
 | **parallel-execution-strategist** | Agent decomposition, fan-out patterns, worktree isolation | "parallelize", "fan out", "run agents" |
-| **notebooklm** | NotebookLM CLI — podcasts, quizzes, slides, flashcards from any content | `/notebooklm`, "create a podcast", "generate a quiz", "flashcards" |
+| **notebooklm** | NotebookLM CLI — podcasts, quizzes, slides, flashcards from any content | `/notebooklm`, "create a podcast" |
 | **knowledge-management** | Organize, retrieve, and connect knowledge across projects | "save this", "recall", "knowledge graph" |
-| **polychronos-team** | Multi-agent orchestration framework — strategic + architecture + implementation agents | "polychronos", "agent team", "run the team" |
-| **portable-ai-instructions** | Cross-platform AI instruction templates | "portable instructions", "system prompt" |
+| **polychronos-team** | Multi-agent orchestration framework — strategic + architecture + implementation | "polychronos", "agent team" |
+| **portable-ai-instructions** | Cross-platform AI instruction templates | "portable instructions" |
 
 ### Engineering Skills (`skills/engineering/`)
 | Skill | Purpose | Trigger |
@@ -43,6 +54,8 @@ This addon ships with **60+ specialist skills** organized into six tiers. The `a
 | **database-design** | Schema design, normalization, indexing strategy | "design the database", "schema" |
 | **docker-infrastructure** | Docker best practices, multi-stage builds, compose | "docker", "containerize" |
 | **mcp-server-builder** | Build custom MCP servers and tools | "build an MCP", "custom tool" |
+| **github-repo-optimizer** | Repo health audit, Actions, Dependabot, branch protection, security | "optimize repo", "github best practices", "repo audit" |
+| **bitwarden-vault** | Safe credential retrieval, vault organization, session management | "bitwarden", "vault", "credentials", "secrets" |
 | **n8n-workflow-architect** | n8n workflow design, automation, API integrations | "n8n", "workflow", "automate" |
 | **data-analytics-engine** | Metrics, dashboards, analytics pipelines | "analytics", "metrics", "dashboard" |
 
@@ -68,6 +81,21 @@ This addon ships with **60+ specialist skills** organized into six tiers. The `a
 | **financial-model-architect** | Unit economics, runway, 3-scenario model | "financial model", "runway" |
 | **consulting-operations** | AI consulting ops, client management | "consulting", "client" |
 | **ai-agentic-specialist** | Agentic architecture, agent design patterns | "AI agents", "agentic" |
+
+### Community Skills (`.claude/skills/`) — installed via ctx7
+
+8 high-trust community skills from Microsoft, davila7, and wshobson:
+
+| Skill | Source | Purpose |
+| ----- | ------ | ------- |
+| **cloud-solution-architect** | Microsoft | Azure Architecture Center best practices, WAF 5-pillar review, 44 cloud design patterns |
+| **architecture-patterns** | wshobson | Clean Architecture, Hexagonal, DDD — tactical code structure patterns |
+| **security-threat-model** | davila7 | Repository-grounded threat modeling with abuse paths and mitigations |
+| **threat-modeling-expert** | davila7 | STRIDE, PASTA, attack trees — security architecture methodology |
+| **stride-analysis-patterns** | wshobson | STRIDE templates, Python code, DFD analysis, per-interaction threats |
+| **markdown-token-optimizer** | Microsoft | Analyze markdown files for token efficiency and bloat reduction |
+| **context-window-management** | davila7 | Tiered context strategy, serial position optimization, intelligent summarization |
+| **nowait-reasoning-optimizer** | davila7 | NOWAIT technique for 27-51% reasoning token reduction in R1-style models |
 
 ### Tech Stack Skills (`skills/tech/`)
 
@@ -128,20 +156,36 @@ npx ctx7 skills suggest           # Auto-recommend skills for your project
 
 ## Skill Routing (How adaptive-skill-orchestrator works)
 
-The `adaptive-skill-orchestrator` replaces static routing with dynamic selection:
+The `adaptive-skill-orchestrator` replaces static routing with dynamic selection.
+
+**Always-on layer (runs on every response, zero explicit trigger):**
 
 ```
-EVERY REQUEST → decompose intent → score skills → decide parallel vs sequential → dispatch → synthesize
+efficiency-engine → prompt-amplifier → cognitive-excellence → anti-hallucination
+                                                              ↓
+                                        context-guardian (monitors continuously)
+                                        secure-by-design (all code paths)
+                                        solution-architect-engine (all design decisions)
+                                        verification-before-completion (all claims)
+```
+
+**Request routing (after always-on layer):**
+
+```
+EVERY REQUEST → decompose → security gate → architecture gate → context check → score → dispatch → synthesize
 
 Examples:
-  Code change        → brainstorming ∥ writing-plans → TDD → code-review → verification
+  Code change        → secure-by-design + brainstorming ∥ writing-plans → TDD → code-review → verification
   Bug report         → systematic-debugging → testing-strategy → verification
-  New skill needed   → skill-builder → skill-amplifier → verification
-  Security concern   → app-security-architect ∥ code-review → verification
+  New feature        → solution-architect-engine → brainstorming → writing-plans → TDD → ship
+  Security concern   → secure-by-design + app-security-architect ∥ stride-analysis → verification
+  System design      → solution-architect-engine + cloud-solution-architect ∥ architecture-patterns
   Content creation   → notebooklm (podcast / quiz / slides)
   Complex task       → parallel-execution-strategist → fan-out subagents
   Business question  → business-genius ∥ market-intelligence → synthesis
   Launch planning    → go-to-market-engine ∥ pricing-strategist ∥ financial-model-architect
+  Context >60%       → context-guardian AMBER: sequential only, compressed, verified
+  Context >80%       → context-guardian RED: minimal ops, session handoff document
 ```
 
 ∥ = runs in parallel

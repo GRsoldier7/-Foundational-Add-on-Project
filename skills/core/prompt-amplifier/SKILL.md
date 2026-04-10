@@ -31,7 +31,7 @@ metadata:
   author: aaron-deyoung
   version: "1.0"
   domain-category: core
-  adjacent-skills: polychronos-team, skill-builder, portable-ai-instructions
+  adjacent-skills: polychronos-team, skill-builder, portable-ai-instructions, secure-by-design, solution-architect-engine, context-guardian, efficiency-engine, cognitive-excellence
   last-reviewed: "2026-03-15"
   review-trigger: "New Claude capabilities affecting prompt engineering, model-specific optimization changes"
   capability-assumptions:
@@ -113,6 +113,23 @@ For complex tasks, add explicit reasoning requests:
 - "Consider the tradeoffs from multiple angles"
 - "Show your reasoning, not just your conclusions"
 
+**Layer 7 — Reasoning Transparency & Epistemic Clarity**
+For technical or strategic decisions, add reasoning scaffolding:
+- "Show your reasoning for each recommendation, not just conclusions"
+- "Flag assumptions and what would change them"
+- "State confidence levels for each claim"
+- "Distinguish between facts, likely inferences, and speculative extrapolations"
+This layer pairs with anti-hallucination and cognitive-excellence to prevent
+confident-but-false claims and ensure peak reasoning quality.
+
+**Layer 8 — Security & Architecture Awareness**
+For any code or system design request, inject:
+- "Consider security implications at every layer (input validation, auth, secrets, network)"
+- "Consider future-proofing: will this still work if requirements change or scale 10x?"
+- "Apply the solution-architect-engine checklist before recommending an approach"
+This layer ensures secure-by-design and solution-architect-engine are activated
+even when the user doesn't explicitly ask for security or architecture review.
+
 ### Step 4: Format the amplified prompt
 
 Present the amplified version cleanly. Show the user what you've created so they can approve, tweak, or fire it off. Format it as a ready-to-use prompt — not a description of what you changed.
@@ -193,7 +210,14 @@ Fix: Ask at most 1-2 questions, only when the answer fundamentally changes the o
 else, make the best assumption, note it explicitly ("I'm assuming this is for a technical audience"),
 and proceed.
 
-**Anti-Pattern 3: Amplifying Without Changing the Core Request**
+**Anti-Pattern 3: Amplifying Without Token Cost Awareness**
+In deep context (>60% full), amplifying a prompt adds tokens when context is most constrained.
+Amplification layers that don't change output quality waste precious context budget.
+Fix: In deep context, apply only the layers that create measurable output difference.
+Consult efficiency-engine for token-aware amplification in constrained sessions.
+Skip Layers 1-3 if the request is already clear; jump straight to Layers 5-8.
+
+**Anti-Pattern 4: Amplifying Without Changing the Core Request**
 Adding verbose framing, role definitions, and output instructions that don't actually change what the
 model will produce. The result is a longer prompt with the same output quality.
 Fix: After amplifying, ask: "Would a different AI model produce meaningfully better output with this

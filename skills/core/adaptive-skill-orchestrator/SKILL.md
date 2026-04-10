@@ -58,6 +58,13 @@ REQUEST ANALYSIS PROTOCOL
    - 1-2: Single skill, no orchestration needed → invoke directly
    - 3: 2-3 skills, light orchestration
    - 4-5: Full parallel fan-out with synthesis agent
+5. SECURITY GATE: Does this touch auth, permissions, secrets, or data sensitivity?
+   - If yes → secure-by-design REQUIRED (not optional), sequential before implementation
+6. ARCHITECTURE GATE: Does this involve multi-service design, scale decisions, or data architecture?
+   - If yes → solution-architect-engine REQUIRED, future-proofing checklist before code
+7. CONTEXT CHECK: What is current context fill level?
+   - If >60% → context-guardian AMBER mode, prefer sequential, reduce parallel agents
+   - If >80% → context-guardian RED mode, minimal operations, prepare session handoff
 ```
 
 ---
@@ -75,6 +82,11 @@ For each domain, evaluate candidate skills and score against the request:
 | prompt-amplifier | Every request — silent optimization |
 | session-optimizer | Context > 40% filled |
 | verification-before-completion | Before any completion claim |
+| **solution-architect-engine** | Every architecture/design decision — future-proofing checklist |
+| **secure-by-design** | Every code-related response — security DNA layer |
+| **context-guardian** | Continuous — escalates at 60% (AMBER) and 80% (RED) |
+| **efficiency-engine** | Every response — maximum information density per token |
+| **cognitive-excellence** | Every non-trivial response — peak reasoning quality |
 
 **ORCHESTRATION LAYER (this skill selects from below)**
 
@@ -170,6 +182,17 @@ NEVER parallelize (sequential only):
 CONDITIONAL:
   - skill-builder + skill-amplifier: builder first, amplifier after (sequential)
   - but multiple skill-builder jobs are parallel-safe
+
+CONTEXT-AWARE PARALLELIZATION:
+  IF context > 60% (AMBER):
+    → Prefer SEQUENTIAL over PARALLEL (parallel amplifies hallucination risk)
+    → Consult efficiency-engine FIRST to optimize token usage
+    → Limit to ≤2 parallel agents max
+    → Reduce skill count: consolidate related work into fewer agents
+  IF context > 80% (RED):
+    → SEQUENTIAL ONLY — no parallel agents
+    → Minimal skill selection — only what's strictly required
+    → Prepare session handoff via context-guardian
 ```
 
 ### Fan-Out Template
@@ -212,6 +235,10 @@ When multiple skills produce outputs:
 3. **Layer** — strategy output frames the context; engineering output provides the implementation; growth output drives the distribution
 4. **Single voice** — rewrite as one coherent response, not a list of skill outputs stitched together
 5. **Verify** — run verification-before-completion before presenting final output
+   - Flag any claims at anti-hallucination tiers UNCERTAIN or SPECULATIVE
+   - Verify architectural decisions meet solution-architect-engine standards
+   - Verify security decisions meet secure-by-design standards
+   - Verify reasoning quality meets cognitive-excellence standards
 
 ---
 
@@ -280,8 +307,12 @@ Fix: Run synthesis agent again with explicit conflict resolution instruction bef
 ## Quality Gates
 
 - [ ] Request decomposed before any skill selected
+- [ ] Security gate checked: if security-related, secure-by-design added?
+- [ ] Architecture gate checked: if design-related, solution-architect-engine consulted?
+- [ ] Context level checked: if >60%, efficiency-engine consulted before orchestration?
 - [ ] Parallelization decision explicitly made (not defaulted)
 - [ ] No skill selected without a matching domain signal
 - [ ] Synthesis pass completed before presenting output
 - [ ] verification-before-completion run on final output
+- [ ] cognitive-excellence quality check passed on final output
 - [ ] Routing feedback recorded for self-optimization

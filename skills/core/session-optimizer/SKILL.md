@@ -20,7 +20,7 @@ metadata:
   author: aaron-deyoung
   version: "1.0"
   domain-category: core
-  adjacent-skills: parallel-execution-strategist, anti-hallucination, skill-amplifier, polychronos-team
+  adjacent-skills: parallel-execution-strategist, anti-hallucination, skill-amplifier, polychronos-team, secure-by-design, solution-architect-engine, context-guardian, efficiency-engine, cognitive-excellence
   last-reviewed: "2026-03-21"
   review-trigger: "New Claude Code features, context window changes, user reports session inefficiency"
   capability-assumptions:
@@ -128,6 +128,33 @@ Before compacting (or asking the user to compact):
 2. Update task list with current status
 3. Note any key context that's only in conversation (not in files)
 4. If mid-implementation: write a brief state note to CLAUDE.md or a temp file
+
+---
+
+## Security & Architecture Session Checkpoints
+
+### When to Invoke secure-by-design
+- **Threat model**: Designing a new system with security implications
+- **Permission model**: Session touches authentication, authorization, or access control
+- **Data sensitivity**: Handling PII, financial, or health data
+- **Integration point**: Connecting to external APIs or services
+
+**Checkpoint:** Before implementing security-critical code, summarize threat model
+and hand off to secure-by-design skill. Save output to docs/ for future sessions.
+
+### When to Invoke solution-architect-engine
+- **Multi-service design**: System with >3 services or significant scaling decisions
+- **Data architecture**: Choice between SQL/NoSQL, replication, sharding
+- **Infrastructure decision**: On-prem vs cloud, containerization, edge computing
+
+**Checkpoint:** Architectural decisions must be preserved in CLAUDE.md or docs/
+(not volatile conversation context).
+
+### Context-Guardian Integration
+At 60%+ context fill, context-guardian takes over context management:
+- Activates AMBER mode: verification-heavy, compressed responses
+- At 80%+: RED mode with session handoff document generation
+- Session-optimizer defers to context-guardian for all compaction decisions past 60%
 
 ---
 

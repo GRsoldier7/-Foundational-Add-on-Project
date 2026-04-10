@@ -27,7 +27,7 @@ metadata:
   author: aaron-deyoung
   version: "1.0"
   domain-category: core
-  adjacent-skills: skill-amplifier, prompt-amplifier, code-review, polychronos-team
+  adjacent-skills: skill-amplifier, prompt-amplifier, code-review, polychronos-team, secure-by-design, solution-architect-engine, context-guardian, efficiency-engine, cognitive-excellence
   last-reviewed: "2026-03-21"
   review-trigger: "New Claude version with different context behavior, user reports hallucination pattern"
   capability-assumptions:
@@ -237,6 +237,24 @@ When the user pushes back, or when you suspect drift, run this procedure before 
 - Formula syntax in Power Apps — state as LIKELY, recommend testing in maker portal.
 - Power Automate expression functions — verify in Microsoft docs if non-trivial.
 
+### Security & Architecture Decision Verification
+
+**Risk:** Architectural patterns, security mechanisms, and database design decisions hallucinate
+frequently because the model generates plausible-sounding patterns without confirming they're
+appropriate for the specific use case, threat model, or scale requirements.
+
+**Protocol:**
+- Before claiming "use X authentication pattern": verify against secure-by-design threat model
+- Before asserting normalization/sharding/replication strategy: re-read schema requirements
+- For distributed system patterns: state failure mode assumptions explicitly
+  (e.g., "assuming Byzantine fault tolerance not required") before recommending
+- For security controls: flag as UNCERTAIN unless from current session or verified against OWASP/NIST
+- For cloud architecture: verify service names, limits, and pricing against current docs
+- For API design: confirm versioning strategy fits the use case — don't default to "just use REST"
+
+**Escalation:** When context-guardian signals AMBER (60%+), ALL architecture and security claims
+require re-verification before output. No exceptions.
+
 ---
 
 ## Self-Evaluation (run before every response with factual claims)
@@ -247,5 +265,8 @@ Before presenting any response containing specific factual claims, silently chec
 [ ] Is every external library API call either seen in session or flagged for verification?
 [ ] Is the reasoning chain traceable — does each step follow from what was actually established?
 [ ] If context is >40% full: have I re-verified claims about earlier session content?
+[ ] If context is >60% full: have I re-verified ALL security and architecture claims?
 [ ] Am I presenting a LIKELY or UNCERTAIN claim as VERIFIED?
+[ ] Have I checked with context-guardian for current phase (GREEN/AMBER/RED)?
+
 If any check fails: add the appropriate confidence tier label before presenting.
