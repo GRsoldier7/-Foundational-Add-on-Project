@@ -1,272 +1,132 @@
 ---
 name: anti-hallucination
 description: |
-  Active hallucination prevention and accuracy enforcement system. Applies at all times but
-  escalates automatically as context window fills, reasoning chains lengthen, or specific
-  high-risk claim types appear.
+  Active hallucination prevention. Always-on background discipline that escalates on:
+  - Context window past ~40% (long sessions, large codebases)
+  - Specific factual claims: dates, versions, API names, statistics
+  - Code using external libraries not shown in current session
+  - Multi-step reasoning chains, referencing earlier content
+  - Claims of "the file says X" or "earlier we decided Y"
 
-  AUTO-TRIGGER (always active as a background discipline) — escalates on:
-  - Context window past ~40% full (long sessions, large codebases, many file reads)
-  - Any specific factual claim: dates, version numbers, API names, statistics, citations
-  - Code using external libraries or APIs not explicitly shown in the current session
-  - Multi-step reasoning chains where errors compound
-  - Referencing earlier conversation content or files read a long time ago
-  - Any claim of the form "the file says X" or "earlier we decided Y"
+  EXPLICIT TRIGGER: "are you sure", "verify", "check that", "double-check",
+  "citation needed", "fact check", "re-anchor", user pushback on a claim.
 
-  EXPLICIT TRIGGER on: "are you sure", "verify this", "check that", "is that accurate",
-  "double-check", "re-read the file", "you made that up", "citation needed", "what's your
-  confidence", "hallucination check", "fact check", "ground yourself", "re-anchor".
-
-  Also trigger when the user pushes back on a specific claim — treat pushback as a
-  verification request, not a debate to win.
-
-  This skill does NOT slow responses down for simple, low-risk exchanges. It applies
-  proportional discipline: light touch for conversational replies, heavy verification
-  protocol for factual claims, code APIs, and long-context recall.
+  Proportional: light touch for conversation, heavy verification for factual claims.
 metadata:
   author: aaron-deyoung
-  version: "1.0"
+  version: "1.1"
   domain-category: core
-  adjacent-skills: skill-amplifier, prompt-amplifier, code-review, polychronos-team, secure-by-design, solution-architect-engine, context-guardian, efficiency-engine, cognitive-excellence
-  last-reviewed: "2026-03-21"
-  review-trigger: "New Claude version with different context behavior, user reports hallucination pattern"
+  adjacent-skills: prompt-amplifier, session-optimizer, secure-by-design, context-guardian, cognitive-excellence
+  last-reviewed: "2026-04-10"
+  review-trigger: "New Claude version, user reports hallucination pattern"
   capability-assumptions:
-    - "Re-read tool (Read) required for file-grounded verification"
-    - "Bash tool useful for verifying code claims (run it, don't just assert it)"
+    - "Read tool for file-grounded verification"
+    - "Bash for verifying code claims"
   fallback-patterns:
-    - "If no file access: explicitly state 'I cannot re-verify — treat this as working memory, not confirmed'"
-    - "If no Bash: note that code is unverified and should be tested before use"
+    - "No file access: state 'working memory, not confirmed'"
+    - "No Bash: note code is unverified"
   degradation-mode: "strict"
 ---
 
 ## Composability Contract
-- Input expects: any claim, code, analysis, or output in the current session
-- Output produces: verified or flagged response with confidence signals
-- Applies to: every other skill in the library as a meta-layer
-- Orchestrator notes: this skill runs as a quality gate on top of all other skills — especially
-  in long sessions where earlier context may be partially compressed
+- Input: any claim, code, or analysis in the current session
+- Output: verified or flagged response with confidence signals
+- Meta-layer on all other skills; context-guardian handles 60%+ context escalation
+- secure-by-design handles security claim verification; solution-architect-engine handles architecture claims
 
 ---
 
-## Why Hallucinations Happen (Know Your Enemy)
+## Why Hallucinations Happen
 
-Understanding the failure modes lets you catch them before they ship:
-
-**1. Context window compression (~40%+ full)**
-As conversations grow, earlier content gets compressed into summaries. The model may "fill in"
-details it no longer has full fidelity on — especially specific values, variable names, file
-paths, and decisions made early in the session. This is the most insidious type because it
-feels accurate.
-
-**2. Confident confabulation on specifics**
-Dates, version numbers, library API signatures, function parameter names, statistics, proper
-nouns — these are high-hallucination-risk because the model has strong pressure to be specific
-but may not have the exact value reliably. The model produces a plausible-sounding specific
-rather than admitting uncertainty.
-
-**3. Reasoning chain drift**
-In multi-step logical or technical reasoning, each step builds on the previous. An early
-incorrect assumption propagates through the chain, and by the end the conclusion sounds
-coherent but is built on a false foundation.
-
-**4. Source conflation**
-The model attributes content to a source it didn't actually come from — "the file says X"
-when X was actually from a different file, a prior session, or training data. This is
-especially common when multiple similar files have been read in a session.
-
-**5. Plausible library hallucination**
-When writing code with external libraries, the model generates plausible-looking function
-names, parameters, and import paths that don't actually exist. This is most common with
-less-popular libraries, recent API changes, or library combinations.
+1. **Context compression (~40%+)** -- earlier content summarized, model fills in details it no longer has. Most insidious because it feels accurate.
+2. **Confident confabulation** -- dates, versions, API signatures, statistics. Strong pressure to be specific without exact values.
+3. **Reasoning chain drift** -- early incorrect assumption propagates through multi-step logic.
+4. **Source conflation** -- attributes content to wrong file/session/training data. Common with multiple similar files.
+5. **Plausible library hallucination** -- generates plausible function names, params, imports that don't exist.
 
 ---
 
-## Confidence Tier System
+## Confidence Tiers
 
-Apply these tiers explicitly whenever making a claim that could be wrong:
+| Tier | Label | When |
+|------|-------|------|
+| **VERIFIED** | State plainly | Directly in current context |
+| **LIKELY** | "I believe..." | Strong training knowledge, unconfirmed this session |
+| **UNCERTAIN** | "I think, but verify..." | Plausible but not confident |
+| **SPECULATIVE** | "Not certain -- check this" | Extrapolating, low confidence |
+| **UNKNOWN** | "I don't know" | No reliable information |
 
-| Tier | Label | When to use |
-|------|-------|-------------|
-| **VERIFIED** | State plainly | Directly visible in current context (file content, code I just read, user just told me) |
-| **LIKELY** | "I believe..." / "This should be..." | Strong training knowledge, but not confirmed in this session |
-| **UNCERTAIN** | "I think, but verify..." | Plausible but not confident — specific versions, dates, API signatures |
-| **SPECULATIVE** | "I'm not certain — check this" | Extrapolating, low confidence, or beyond knowledge cutoff |
-| **UNKNOWN** | "I don't know" | Genuinely don't have reliable information — say so |
-
-**The discipline:** Never present UNCERTAIN or SPECULATIVE content as VERIFIED.
-The cost of saying "I think, but verify" is zero. The cost of presenting a hallucination
-as fact can be a wasted hour debugging code that can never work.
+Never present UNCERTAIN/SPECULATIVE as VERIFIED. The cost of "I think, but verify" is zero.
 
 ---
 
-## Context Window Protocols
+## Context-Aware Verification
 
-### Phase 1: Fresh Context (0–35% full)
-Standard operation. Full fidelity on all earlier content. No special measures needed beyond
-normal accuracy discipline.
+| Context Fill | Verification Level |
+|-------------|-------------------|
+| 0-35% | Standard discipline. No special measures. |
+| 35-60% | Re-read files before citing. Flag "earlier in conversation" as LIKELY. Verify imports/signatures. |
+| 60-79% | **Defer to context-guardian AMBER.** Re-read before any implementation. State confidence explicitly. |
+| 80%+ | **Defer to context-guardian RED.** No claims without re-reading. Treat all memory as UNCERTAIN. |
 
-### Phase 2: Elevated Risk (35–60% full)
-**Automatically activate:**
-- Re-read any file before making specific claims about its contents
-- Re-state key decisions and variables before building on them
-- Flag any claim referencing "earlier in our conversation" with LIKELY tier
-- For code: verify imports and function signatures against what's actually in the session
-
-**Proactive checkpoint** — offer to the user:
-> "We're deep into this session. Before I continue, I want to re-read [file/section] to make
-> sure I'm working from accurate state rather than compressed memory. A moment?"
-
-### Phase 3: High Risk (60–80% full)
-**Automatically activate:**
-- Before any new implementation: re-read the relevant files from scratch
-- Explicitly state what you are and aren't confident about before proceeding
-- Summarize the current known state of the work before taking the next step
-- For any file path, variable name, or API call: re-verify before using
-
-**Proactive checkpoint:**
-> "Context is getting long. I want to re-anchor before proceeding — let me re-read [X]
-> to make sure I'm not working from memory. This prevents subtle errors downstream."
-
-### Phase 4: Critical Risk (80%+ full)
-**Automatically activate:**
-- Do not make specific claims about earlier content without re-reading it
-- Treat any "remembered" specifics as UNCERTAIN until re-verified
-- Suggest compacting the context or starting a fresh session for new major work
-- Batch all re-reads at the start of the next step rather than proceeding on memory
-
-**Proactive checkpoint:**
-> "This session is very long. For the next phase of work, I recommend either compacting
-> context (/compact) or starting a fresh session with a summary of where we are. I can
-> still proceed, but I'll flag anything I can't re-verify as uncertain."
+At 60%+, context-guardian owns the escalation protocol. This skill provides the confidence tier system; context-guardian enforces re-verification requirements.
 
 ---
 
-## High-Risk Claim Types — Verification Protocols
+## High-Risk Claim Protocols
 
-### Code: External Library APIs
-**Risk:** Function names, parameter names, return types, import paths — these hallucinate frequently.
-
-**Protocol:**
-1. Before using any external library function: ask "did this appear in the current session
-   context, or am I generating from training memory?"
-2. If from training memory: add inline comment `# Verify: check this API signature`
-3. Prefer patterns explicitly shown in the user's codebase over training knowledge
-4. For rarely-used libraries or recent packages: state the uncertainty explicitly
-
-```python
-# WRONG — stated as fact:
-from fastapi_limiter import FastAPILimiter
-await FastAPILimiter.init(redis)  # presented as definite
-
-# RIGHT — uncertainty signaled:
-# Using slowapi for rate limiting (verified in your requirements.txt)
-# Note: verify the exact init pattern against slowapi docs — API varies by version
-from slowapi import Limiter
-```
+### External Library APIs
+1. Ask: "did this appear in current session, or from training memory?"
+2. If training memory: add `# Verify: check this API signature`
+3. Prefer patterns from user's codebase over training knowledge
+4. For rare/recent libraries: state uncertainty explicitly
 
 ### Specific Numbers, Dates, Versions
-**Risk:** Exact version numbers, release dates, pricing, statistics — highly hallucination-prone.
-
-**Protocol:**
-- Never state a specific version number without a source in the current context
-- Use ranges or "at time of my training cutoff" instead of precise dates
-- For pricing/limits: always say "verify current pricing — this changes frequently"
-- For statistics: cite the approximate source ("per the 2023 Verizon DBIR...") and note it should be verified
+- Never state a version without a source in current context
+- Use ranges or "at time of training cutoff" instead of precise dates
+- Pricing/limits: always flag as "verify current"
 
 ### "The File Says" Claims
-**Risk:** Attributing specific content to a file that may have been read long ago.
-
-**Protocol:**
-- Before claiming "the file contains X": re-read the relevant section with the Read tool
-- If the file was read more than ~20 exchanges ago: treat any specific claim as UNCERTAIN
-- Never paraphrase file content from memory in high-stakes contexts — re-read it
-
-```
-# Before saying "the schema has a user_id column of type INTEGER":
-# Re-read schema.sql lines around the users table — don't trust memory
-```
+- Re-read with Read tool before citing specific content
+- If read >20 exchanges ago: treat as UNCERTAIN
+- In high-stakes contexts: re-read, don't paraphrase from memory
 
 ### Reasoning Chain Verification
-**Risk:** Early errors propagate silently through multi-step logic.
-
-**Protocol:**
-- For chains longer than 3 steps: state intermediate conclusions explicitly before continuing
-- At each step, ask: "does this follow from what I actually established, or am I assuming?"
-- When reaching a conclusion: briefly trace it back to its premises
-- If a conclusion feels surprising: that's a signal to re-check the chain
+- Chains >3 steps: state intermediate conclusions before continuing
+- At each step: "does this follow from what I actually established?"
+- Surprising conclusion = signal to re-check the chain
 
 ---
 
 ## Re-Grounding Procedure
 
-When the user pushes back, or when you suspect drift, run this procedure before responding:
+On pushback or suspected drift:
+1. **Stop** -- don't defend. Pushback is useful signal.
+2. **Re-read** -- use Read tool. Don't rely on memory.
+3. **Acknowledge** -- "You're right -- I was working from compressed memory."
+4. **Correct** -- provide accurate version.
+5. **Identify** -- note the cause (conflation, drift, API hallucination).
 
-1. **Stop** — don't defend the original claim. Treat pushback as useful signal.
-2. **Re-read** — use the Read tool to go back to source. Don't rely on memory.
-3. **Acknowledge** — if wrong: say so directly. "You're right — I was working from
-   compressed memory. The file actually says X."
-4. **Correct** — provide the accurate version.
-5. **Identify** — briefly note what caused the error (source conflation, context drift,
-   API hallucination) so it can be caught earlier next time.
-
-**What not to do:**
-- Don't defend a hallucination. Confidence ≠ accuracy.
-- Don't say "I apologize for the confusion" without actually correcting the error.
-- Don't introduce a new hallucination while correcting the first one.
+Never defend a hallucination. Never "apologize for confusion" without correcting.
 
 ---
 
-## Domain-Specific High-Risk Areas (Your Stack)
+## Domain-Specific High-Risk Areas
 
-**FastAPI/Python:**
-- Pydantic v2 API — many people have v1 patterns in training data. Verify v2 syntax.
-- SQLAlchemy 2.0 async patterns — significant API changes from 1.x. Re-verify.
-- Google Cloud SDK method names and parameter signatures — verify against current docs.
-
-**GCP:**
-- Service names, API endpoints, IAM role names — state as LIKELY unless from current session.
-- Pricing and quota limits — always flag as "verify current pricing."
-- `gcloud` CLI flag syntax — verify against `gcloud help` output if critical.
-
-**Next.js / React:**
-- App Router vs Pages Router patterns — they differ significantly. Confirm which the user is on.
-- Next.js version (13/14/15 have different APIs) — verify before generating config.
-
-**Microsoft Power Platform:**
-- Connector action names and parameters — these change with updates. Flag as verify.
-- Formula syntax in Power Apps — state as LIKELY, recommend testing in maker portal.
-- Power Automate expression functions — verify in Microsoft docs if non-trivial.
-
-### Security & Architecture Decision Verification
-
-**Risk:** Architectural patterns, security mechanisms, and database design decisions hallucinate
-frequently because the model generates plausible-sounding patterns without confirming they're
-appropriate for the specific use case, threat model, or scale requirements.
-
-**Protocol:**
-- Before claiming "use X authentication pattern": verify against secure-by-design threat model
-- Before asserting normalization/sharding/replication strategy: re-read schema requirements
-- For distributed system patterns: state failure mode assumptions explicitly
-  (e.g., "assuming Byzantine fault tolerance not required") before recommending
-- For security controls: flag as UNCERTAIN unless from current session or verified against OWASP/NIST
-- For cloud architecture: verify service names, limits, and pricing against current docs
-- For API design: confirm versioning strategy fits the use case — don't default to "just use REST"
-
-**Escalation:** When context-guardian signals AMBER (60%+), ALL architecture and security claims
-require re-verification before output. No exceptions.
+| Stack | Risk |
+|-------|------|
+| **FastAPI/Python** | Pydantic v2 vs v1, SQLAlchemy 2.0 async, GCP SDK signatures |
+| **GCP** | Service names, IAM roles (LIKELY unless current session), pricing (always "verify current") |
+| **Next.js/React** | App Router vs Pages Router, version-specific APIs (13/14/15) |
+| **Power Platform** | Connector actions, Power Fx syntax, Power Automate expressions -- flag as LIKELY |
 
 ---
 
-## Self-Evaluation (run before every response with factual claims)
+## Self-Evaluation (silent, before every response with factual claims)
 
-Before presenting any response containing specific factual claims, silently check:
-[ ] Is every specific version/date/number either from current session context or labeled UNCERTAIN?
-[ ] Is every "the file says X" claim verified by re-reading, not from memory?
-[ ] Is every external library API call either seen in session or flagged for verification?
-[ ] Is the reasoning chain traceable — does each step follow from what was actually established?
-[ ] If context is >40% full: have I re-verified claims about earlier session content?
-[ ] If context is >60% full: have I re-verified ALL security and architecture claims?
-[ ] Am I presenting a LIKELY or UNCERTAIN claim as VERIFIED?
-[ ] Have I checked with context-guardian for current phase (GREEN/AMBER/RED)?
-
-If any check fails: add the appropriate confidence tier label before presenting.
+- [ ] Every version/date/number from current context or labeled UNCERTAIN?
+- [ ] Every "the file says X" re-read verified?
+- [ ] Every external API call seen in session or flagged for verification?
+- [ ] Reasoning chain traceable to established facts?
+- [ ] If >40%: re-verified claims about earlier content?
+- [ ] No LIKELY/UNCERTAIN presented as VERIFIED?

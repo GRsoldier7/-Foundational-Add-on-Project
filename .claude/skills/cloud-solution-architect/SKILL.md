@@ -16,7 +16,6 @@ Design well-architected, production-grade cloud systems following Azure Architec
 - **6 architecture styles** with selection guidance
 - **44 cloud design patterns** mapped to WAF pillars
 - **Technology choice frameworks** for compute, storage, data, messaging
-- **Performance antipatterns** to avoid
 - **Architecture review workflow** for systematic design validation
 
 ---
@@ -160,44 +159,6 @@ See [Technology Choices Reference](./references/technology-choices.md) for detai
 
 ---
 
-## Best Practices
-
-| Practice | Key Guidance |
-|----------|-------------|
-| **API design** | RESTful conventions, resource-oriented URIs, HATEOAS, versioning via URL path or header |
-| **API implementation** | Async operations, pagination, idempotent PUT/DELETE, content negotiation, ETag caching |
-| **Autoscaling** | Scale on metrics (CPU, queue depth, custom), cool-down periods, predictive scaling, scale-in protection |
-| **Background jobs** | Use queues or scheduled triggers, idempotent processing, poison message handling, graceful shutdown |
-| **Caching** | Cache-aside pattern, TTL policies, cache invalidation strategies, distributed cache for multi-instance |
-| **CDN** | Static asset offloading, cache-busting with versioned URLs, geo-distribution, HTTPS enforcement |
-| **Data partitioning** | Horizontal (sharding), vertical, functional partitioning; partition key selection for even distribution |
-| **Partitioning strategies** | Hash-based, range-based, directory-based; rebalancing approach, cross-partition query avoidance |
-| **Host name preservation** | Preserve original host header through proxies/gateways for cookies, redirects, auth flows |
-| **Message encoding** | Schema evolution (Avro/Protobuf), backward/forward compatibility, schema registry |
-| **Monitoring & diagnostics** | Structured logging, distributed tracing (W3C Trace Context), metrics, alerts, dashboards |
-| **Transient fault handling** | Retry with exponential backoff + jitter, circuit breaker, idempotency keys, timeout budgets |
-
-See [Best Practices Reference](./references/best-practices.md) for implementation details.
-
----
-
-## Performance Antipatterns
-
-Avoid these common patterns that degrade performance under load:
-
-| Antipattern | Problem | Fix |
-|-------------|---------|-----|
-| **Busy Database** | Offloading too much processing to the database | Move logic to application tier, use caching |
-| **Busy Front End** | Resource-intensive work on frontend request threads | Offload to background workers/queues |
-| **Chatty I/O** | Many small I/O requests instead of fewer large ones | Batch requests, use bulk APIs, buffer writes |
-| **Extraneous Fetching** | Retrieving more data than needed | Project only required fields, paginate, filter server-side |
-| **Improper Instantiation** | Recreating expensive objects per request | Use singletons, connection pooling, HttpClientFactory |
-| **Monolithic Persistence** | Single data store for all data types | Polyglot persistence — right store for each workload |
-| **No Caching** | Repeatedly fetching unchanged data | Cache-aside pattern, CDN, output caching, Redis |
-| **Noisy Neighbor** | One tenant consuming all shared resources | Bulkhead isolation, per-tenant quotas, throttling |
-| **Retry Storm** | Aggressive retries overwhelming a recovering service | Exponential backoff + jitter, circuit breaker, retry budgets |
-| **Synchronous I/O** | Blocking threads on I/O operations | Async/await, non-blocking I/O, reactive streams |
-
 ---
 
 ## Mission-Critical Design
@@ -284,31 +245,7 @@ Review each pillar systematically. Document tradeoffs explicitly.
 
 ### Step 7: Document Decisions
 
-Use Architecture Decision Records (ADRs):
-
-```markdown
-# ADR-NNN: [Decision Title]
-
-## Status: [Proposed | Accepted | Deprecated]
-
-## Context
-[What is the issue we're addressing?]
-
-## Decision
-[What did we decide and why?]
-
-## Consequences
-[What are the positive and negative impacts?]
-```
-
----
-
-## References
-
-- [Design Patterns Reference](./references/design-patterns.md) — Detailed pattern implementations
-- [Technology Choices Reference](./references/technology-choices.md) — Decision trees for Azure services
-- [Best Practices Reference](./references/best-practices.md) — Implementation guidance
-- [Mission-Critical Reference](./references/mission-critical.md) — High-availability design
+Use Architecture Decision Records (ADRs). See `solution-architect-engine` for the ADR template.
 
 ---
 

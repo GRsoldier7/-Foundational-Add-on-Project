@@ -1,6 +1,6 @@
 ---
-name: markdown-token-optimizer
-description: "Analyzes markdown files for token efficiency. TRIGGERS: optimize markdown, reduce tokens, token count, token bloat, too many tokens, make concise, shrink file, file too large, optimize for AI, token efficiency, verbose markdown, reduce file size"
+name: markdown-output-optimizer
+description: "Analyzes markdown files for output efficiency. TRIGGERS: optimize markdown, reduce output, output count, output bloat, make concise, shrink file, file too large, optimize for AI, verbose markdown, reduce file size"
 license: MIT
 metadata:
   author: Microsoft
