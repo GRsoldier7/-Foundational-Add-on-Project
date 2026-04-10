@@ -84,17 +84,14 @@ This addon ships with **60+ specialist skills** organized into six tiers. The `a
 
 ### Community Skills (`.claude/skills/`) — installed via ctx7
 
-8 high-trust community skills from Microsoft, davila7, and wshobson:
+5 high-trust community skills from Microsoft, davila7, and wshobson:
 
 | Skill | Source | Purpose |
 | ----- | ------ | ------- |
 | **cloud-solution-architect** | Microsoft | Azure Architecture Center best practices, WAF 5-pillar review, 44 cloud design patterns |
 | **architecture-patterns** | wshobson | Clean Architecture, Hexagonal, DDD — tactical code structure patterns |
 | **security-threat-model** | davila7 | Repository-grounded threat modeling with abuse paths and mitigations |
-| **threat-modeling-expert** | davila7 | STRIDE, PASTA, attack trees — security architecture methodology |
-| **stride-analysis-patterns** | wshobson | STRIDE templates, Python code, DFD analysis, per-interaction threats |
-| **markdown-token-optimizer** | Microsoft | Analyze markdown files for token efficiency and bloat reduction |
-| **context-window-management** | davila7 | Tiered context strategy, serial position optimization, intelligent summarization |
+| **markdown-output-optimizer** | Microsoft | Analyze markdown files for output efficiency and bloat reduction |
 | **nowait-reasoning-optimizer** | davila7 | NOWAIT technique for 27-51% reasoning token reduction in R1-style models |
 
 ### Tech Stack Skills (`skills/tech/`)
