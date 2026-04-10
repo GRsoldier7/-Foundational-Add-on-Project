@@ -10,17 +10,19 @@ This project is a **workspace addon** designed to be included alongside any othe
 
 ## Skill Library
 
-This addon ships with **16 specialist skills** organized into three tiers. Skills compose — use `master-orchestrator` routing to chain the right skills for any task.
+This addon ships with **60+ specialist skills** organized into six tiers. The `adaptive-skill-orchestrator` automatically selects and parallelizes the optimal skill combination for every request — no manual routing required.
 
 ### Always-On Meta-Layer (activate silently on every response)
 - `anti-hallucination` — Confidence tiers (VERIFIED/LIKELY/UNCERTAIN/UNKNOWN), context drift prevention, re-grounding procedures
 - `prompt-amplifier` — Silently optimizes every prompt before execution (silent + show modes)
 - `session-optimizer` — Context window management; activates proactively at 40%+ context fill
+- `verification-before-completion` — Evidence before claims; runs before any completion declaration
 
 ### Core Skills (`skills/core/`)
 | Skill | Purpose | Trigger |
 |-------|---------|---------|
-| **master-orchestrator** | Routes every request to the optimal skill chain | AUTO on every non-trivial request |
+| **adaptive-skill-orchestrator** | AUTO-selects + parallelizes best skills for any request; self-optimizing | AUTO on every non-trivial request — supersedes master-orchestrator |
+| **master-orchestrator** | Static routing table fallback | Explicit `/master-orchestrator` |
 | **skill-builder** | Creates, audits, and improves skills (5-module pipeline) | `/skill-builder`, "create a skill", "audit this skill" |
 | **skill-amplifier** | 8-pass optimization of any SKILL.md | `/skill-amplifier`, "optimize this skill", "amplify" |
 | **anti-hallucination** | Context drift prevention, confidence tiers | ALWAYS ON |
@@ -28,37 +30,121 @@ This addon ships with **16 specialist skills** organized into three tiers. Skill
 | **session-optimizer** | Context window and session management | AUTO at 40%+ context |
 | **parallel-execution-strategist** | Agent decomposition, fan-out patterns, worktree isolation | "parallelize", "fan out", "run agents" |
 | **notebooklm** | NotebookLM CLI — podcasts, quizzes, slides, flashcards from any content | `/notebooklm`, "create a podcast", "generate a quiz", "flashcards" |
+| **knowledge-management** | Organize, retrieve, and connect knowledge across projects | "save this", "recall", "knowledge graph" |
+| **polychronos-team** | Multi-agent orchestration framework — strategic + architecture + implementation agents | "polychronos", "agent team", "run the team" |
+| **portable-ai-instructions** | Cross-platform AI instruction templates | "portable instructions", "system prompt" |
 
 ### Engineering Skills (`skills/engineering/`)
 | Skill | Purpose | Trigger |
 |-------|---------|---------|
-| **code-review** | Expert code review: correctness, security, performance, failure handling | `/code-review`, "review this code", "check for bugs" |
-| **testing-strategy** | pytest expert: fixtures, transaction-rollback, hypothesis, async | "write tests", "testing strategy", "how to test" |
-| **app-security-architect** | OWASP Top 10, LLM security, GCP hardening, security review | "security review", "is this secure", "OWASP" |
+| **code-review** | Expert code review: correctness, security, performance, failure handling | `/code-review`, "review this code" |
+| **testing-strategy** | pytest expert: fixtures, transaction-rollback, hypothesis, async | "write tests", "testing strategy" |
+| **app-security-architect** | OWASP Top 10, LLM security, GCP hardening | "security review", "is this secure" |
+| **database-design** | Schema design, normalization, indexing strategy | "design the database", "schema" |
+| **docker-infrastructure** | Docker best practices, multi-stage builds, compose | "docker", "containerize" |
+| **mcp-server-builder** | Build custom MCP servers and tools | "build an MCP", "custom tool" |
+| **n8n-workflow-architect** | n8n workflow design, automation, API integrations | "n8n", "workflow", "automate" |
+| **data-analytics-engine** | Metrics, dashboards, analytics pipelines | "analytics", "metrics", "dashboard" |
 
 ### Superpowers (`skills/superpowers/`) — from obra/superpowers
 | Skill | Purpose | Trigger |
 |-------|---------|---------|
-| **verification-before-completion** | Evidence before claims — run commands and read output before declaring success | AUTO before any completion claim |
-| **test-driven-development** | Strict RED-GREEN-REFACTOR — no production code without a failing test first | "TDD", "test first", "write tests before code" |
-| **systematic-debugging** | 4-phase root cause analysis; stop after 3 failed fixes and question architecture | "debug", "why is this failing", "root cause" |
-| **brainstorming** | Hard-gates implementation behind design approval; ask before building | "brainstorm", "design this", "let's think through" |
-| **writing-plans** | Granular implementation plans with 2-5 min tasks, exact file paths, zero placeholders | "write a plan", "plan this", "implementation plan" |
+| **verification-before-completion** | Evidence before claims | AUTO before completion |
+| **test-driven-development** | Strict RED-GREEN-REFACTOR | "TDD", "test first" |
+| **systematic-debugging** | 4-phase root cause analysis | "debug", "why is this failing" |
+| **brainstorming** | Design approval before building | "brainstorm", "design this" |
+| **writing-plans** | Granular implementation plans | "write a plan", "plan this" |
+
+### Strategy Skills (`skills/strategy/`)
+
+| Skill | Purpose | Trigger |
+|-------|---------|---------|
+| **business-genius** | Opportunity analysis, timing, moat, solo-founder viability | "business idea", "opportunity" |
+| **entrepreneurial-os** | Founder operating system, stage-gate model | "what stage am I in", "focus" |
+| **business-plan-architect** | Business plan, pitch deck, investor memo | "business plan", "pitch" |
+| **go-to-market-engine** | ICP, channel selection, launch sequencing | "go to market", "launch", "customers" |
+| **market-intelligence** | TAM/SAM/SOM, competitive landscape | "market size", "competitors" |
+| **pricing-strategist** | Pricing model, packaging, WTP research | "pricing", "how much to charge" |
+| **financial-model-architect** | Unit economics, runway, 3-scenario model | "financial model", "runway" |
+| **consulting-operations** | AI consulting ops, client management | "consulting", "client" |
+| **ai-agentic-specialist** | Agentic architecture, agent design patterns | "AI agents", "agentic" |
+
+### Tech Stack Skills (`skills/tech/`)
+
+25 framework-specific skills covering: FastAPI, PostgreSQL, Next.js, React, Tailwind, Prisma, Vercel, Terraform/GCP, Docker Compose, dbt, Airflow, Cloudflare, Python data pipelines, SQL optimization, frontend design, and more. Invoke by naming the technology: "build a FastAPI endpoint", "optimize this SQL query", "deploy to Vercel".
+
+### gstack Skills (`skills/gstack/`) — from garrytan/gstack (MIT)
+
+34 skills from Y Combinator CEO Garry Tan's battle-tested Claude Code setup. These simulate an entire virtual engineering team:
+
+| Skill | Role |
+| ----- | ---- |
+| **plan-ceo-review** | CEO reviews the plan before any code is written |
+| **plan-eng-review** | Eng manager locks architecture |
+| **plan-design-review** | Designer reviews UX/UI approach |
+| **plan-devex-review** | DevEx review for DX and tooling |
+| **review** | Production code review — finds real bugs |
+| **design-review** | Design review against mockups |
+| **cso** | Chief Security Officer — OWASP + STRIDE audit |
+| **qa** | QA lead with browser automation |
+| **qa-only** | Headless QA run only |
+| **ship** | One-command PR creation + deploy |
+| **land-and-deploy** | Land branch + deploy to production |
+| **retro** | Engineering retrospective |
+| **autoplan** | Auto-generate implementation plan |
+| **browse** | CLI browser automation (Playwright) |
+| **investigate** | Deep investigation agent |
+| **checkpoint** | Save/restore work checkpoints |
+| **freeze** / **unfreeze** | Lock/unlock branches for release |
+| **canary** | Canary deployment management |
+| **guard** | Protect critical paths |
+| **health** | System health check |
+| **learn** | Learn from the codebase |
+| **office-hours** | Open Q&A mode |
+| **pair-agent** | Pair programming agent |
+| **codex** | Code style and conventions |
+| **document-release** | Generate release notes |
+| **benchmark** | Performance benchmarking |
+| **careful** | Careful/conservative mode |
+| **design-consultation** / **design-html** / **design-shotgun** | Design variants |
+| **devex-review** | Developer experience review |
+| **setup-deploy** | Configure deployment pipeline |
+| **connect-chrome** | Connect to existing Chrome instance |
+
+**Typical sprint workflow:** `/autoplan` → `/plan-ceo-review` → `/plan-eng-review` → (build) → `/review` → `/cso` → `/qa` → `/ship`
+
+### Generating New Skills with Context7
+
+Use the `ctx7` CLI to generate new skills backed by live library documentation:
+
+```bash
+npx ctx7 skills generate          # AI-guided skill wizard (6/week free, 10/week Pro)
+npx ctx7 skills search <keyword>  # Search the skills registry
+npx ctx7 skills install /owner/repo # Install skills from a GitHub repo
+npx ctx7 skills suggest           # Auto-recommend skills for your project
+```
 
 ---
 
-## Skill Routing (How master-orchestrator works)
+## Skill Routing (How adaptive-skill-orchestrator works)
 
-For every non-trivial request, the orchestrator identifies which skills apply and chains them:
+The `adaptive-skill-orchestrator` replaces static routing with dynamic selection:
 
 ```
-Code change requested → brainstorming → writing-plans → TDD → code-review → verification
-Bug report received  → systematic-debugging → testing-strategy → verification
-New skill needed     → skill-builder → skill-amplifier → verification
-Security concern     → app-security-architect → code-review
-Content creation     → notebooklm (for audio/visual output)
-Complex task         → parallel-execution-strategist → fan out subagents
+EVERY REQUEST → decompose intent → score skills → decide parallel vs sequential → dispatch → synthesize
+
+Examples:
+  Code change        → brainstorming ∥ writing-plans → TDD → code-review → verification
+  Bug report         → systematic-debugging → testing-strategy → verification
+  New skill needed   → skill-builder → skill-amplifier → verification
+  Security concern   → app-security-architect ∥ code-review → verification
+  Content creation   → notebooklm (podcast / quiz / slides)
+  Complex task       → parallel-execution-strategist → fan-out subagents
+  Business question  → business-genius ∥ market-intelligence → synthesis
+  Launch planning    → go-to-market-engine ∥ pricing-strategist ∥ financial-model-architect
 ```
+
+∥ = runs in parallel
 
 ---
 
