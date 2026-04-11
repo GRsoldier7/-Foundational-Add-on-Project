@@ -3,6 +3,7 @@ import {
   existsSync, mkdirSync, copyFileSync,
 } from 'fs'
 import { join, resolve } from 'path'
+import { randomBytes } from 'crypto'
 import { auditLog } from '../audit.js'
 import { ErrorCode, FoundationAddonError } from '../errors.js'
 
@@ -50,7 +51,6 @@ export async function runInstall(options: InstallOptions): Promise<void> {
   }
 
   // Backup before install (DD-012)
-  const { randomBytes } = await import('crypto')
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
   const suffix = randomBytes(3).toString('hex')
   const backupDir = join(BACKUP_BASE, `${timestamp}-${suffix}`)

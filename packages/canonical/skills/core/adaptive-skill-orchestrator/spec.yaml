@@ -9,7 +9,7 @@ capabilities:
   - context_analysis
 provider_hints:
   claude:
-    system_prefix: "Use structured analysis tags to reason about which skills apply before responding."
+    system_prefix: "Use structured reasoning to analyze which skills apply before responding."
     model: claude-opus-4-6
     max_tokens: 4096
   codex:

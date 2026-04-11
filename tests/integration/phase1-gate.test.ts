@@ -68,7 +68,7 @@ describe('Phase 1 Gate — generate --target claude on all 5 pilot skills', () =
   test('adaptive-skill-orchestrator artifact includes the system_prefix', () => {
     const file = resolve(DIST_CLAUDE, 'adaptive-skill-orchestrator.md')
     const content = readFileSync(file, 'utf8')
-    expect(content).toContain('Use structured analysis tags')
+    expect(content).toContain('Use structured reasoning to analyze')
   })
 
   test('incremental generate skips all 5 unchanged skills', async () => {
