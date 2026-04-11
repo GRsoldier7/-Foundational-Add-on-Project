@@ -35,6 +35,18 @@ describe('hash', () => {
     const h2 = hashSkillSources('core', '{"version":"1.0","name":"x"}', [])
     expect(h1).toBe(h2)
   })
+
+  test('hashSkillSources is stable across NESTED spec JSON key reordering', () => {
+    const h1 = hashSkillSources('core', '{"name":"x","parameters":{"type":"object","properties":{"path":{"type":"string"}}}}', [])
+    const h2 = hashSkillSources('core', '{"parameters":{"properties":{"path":{"type":"string"}},"type":"object"},"name":"x"}', [])
+    expect(h1).toBe(h2)
+  })
+
+  test('hashSkillSources DIFFERS when deeply nested property changes', () => {
+    const h1 = hashSkillSources('core', 'spec', ['{"n":"t","parameters":{"properties":{"path":{"type":"string"}}}}'])
+    const h2 = hashSkillSources('core', 'spec', ['{"n":"t","parameters":{"properties":{"path":{"type":"number"}}}}'])
+    expect(h1).not.toBe(h2)
+  })
 })
 
 describe('tokenizer', () => {

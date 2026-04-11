@@ -3,6 +3,20 @@ import { toClaudeTools } from './utils/translate-tools.js'
 import type { SkillSpec, CLMIMessage, NormalizedResponse, JSONSchema } from './types.js'
 import type { AnthropicTool } from './utils/translate-tools.js'
 
+/**
+ * Quote and escape a string for safe YAML double-quoted scalar output.
+ * Handles backslash, double-quote, and newline escaping per YAML 1.2 spec.
+ */
+function yamlScalar(s: string): string {
+  const escaped = s
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t')
+  return `"${escaped}"`
+}
+
 export class ClaudeAdapter extends BaseAdapter {
   readonly provider = 'claude'
   readonly contextLimitTokens = 200_000
@@ -14,8 +28,8 @@ export class ClaudeAdapter extends BaseAdapter {
 
     return [
       '---',
-      `name: ${spec.name}`,
-      `description: ${spec.description}`,
+      `name: ${yamlScalar(spec.name)}`,
+      `description: ${yamlScalar(spec.description)}`,
       'type: skill',
       '---',
       '',

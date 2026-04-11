@@ -5,15 +5,31 @@ export function sha256(content: string): string {
 }
 
 /**
- * Canonicalize a JSON string by parsing and re-serializing with sorted keys.
+ * Recursively sort object keys for stable, deterministic serialization.
+ * Arrays preserve order; objects get key-sorted at every depth.
+ */
+function canon(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canon)
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>
+    return Object.fromEntries(
+      Object.keys(obj)
+        .sort()
+        .map((k) => [k, canon(obj[k])])
+    )
+  }
+  return value
+}
+
+/**
+ * Canonicalize a JSON string by parsing and re-serializing with recursively sorted keys.
  * Returns input unchanged if it's not parseable JSON.
  */
 function canonicalizeJson(input: string): string {
   const trimmed = input.trimStart()
   if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) return input
   try {
-    const parsed = JSON.parse(input)
-    return JSON.stringify(parsed, Object.keys(parsed).sort())
+    return JSON.stringify(canon(JSON.parse(input)))
   } catch {
     return input
   }
@@ -22,7 +38,7 @@ function canonicalizeJson(input: string): string {
 /**
  * Compute a content hash over a skill's source files.
  * Inputs should be the raw file contents, NOT objects. JSON-looking inputs
- * are canonicalized internally to guarantee determinism across key orders.
+ * are canonicalized internally (recursive key sorting) to guarantee determinism.
  * Tool JSONs are sorted alphabetically before hashing for order-independence.
  */
 export function hashSkillSources(

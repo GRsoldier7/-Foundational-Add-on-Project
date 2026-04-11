@@ -35,8 +35,8 @@ describe('ClaudeAdapter', () => {
   test('generateArtifact produces YAML frontmatter block', () => {
     const artifact = adapter.generateArtifact(MOCK_SPEC, MOCK_CORE)
     expect(artifact).toStartWith('---\n')
-    expect(artifact).toContain('name: code-review')
-    expect(artifact).toContain('description: Expert code review for correctness, security, and performance')
+    expect(artifact).toContain('name: "code-review"')
+    expect(artifact).toContain('description: "Expert code review for correctness, security, and performance"')
     expect(artifact).toContain('type: skill')
     const lines = artifact.split('\n')
     const secondDash = lines.slice(1).findIndex(l => l === '---')
@@ -57,7 +57,7 @@ describe('ClaudeAdapter', () => {
   test('generateArtifact works without provider_hints', () => {
     const specWithoutHints: SkillSpec = { ...MOCK_SPEC, provider_hints: undefined }
     const artifact = adapter.generateArtifact(specWithoutHints, MOCK_CORE)
-    expect(artifact).toContain('name: code-review')
+    expect(artifact).toContain('name: "code-review"')
     expect(artifact).toContain('## Code Review')
   })
 
@@ -90,5 +90,32 @@ describe('ClaudeAdapter', () => {
 
   test('parseResponse throws until Phase 2', () => {
     expect(() => adapter.parseResponse({})).toThrow()
+  })
+
+  test('generateArtifact safely quotes description containing colons and special chars', () => {
+    const specWithSpecialChars: SkillSpec = {
+      ...MOCK_SPEC,
+      name: 'code-review',
+      description: 'Expert review: correctness, security, & "performance"',
+    }
+    const artifact = adapter.generateArtifact(specWithSpecialChars, MOCK_CORE)
+    // description line should be quoted and escaped
+    expect(artifact).toContain('description: "Expert review: correctness, security, & \\"performance\\""')
+    // frontmatter should still be valid (exactly 2 `---` lines)
+    const dashLines = artifact.split('\n').filter(l => l === '---')
+    expect(dashLines).toHaveLength(2)
+  })
+
+  test('generateArtifact safely escapes newlines in description', () => {
+    const specWithNewline: SkillSpec = {
+      ...MOCK_SPEC,
+      description: 'Line one\nLine two',
+    }
+    const artifact = adapter.generateArtifact(specWithNewline, MOCK_CORE)
+    expect(artifact).toContain('description: "Line one\\nLine two"')
+    // ensure the raw newline didn't leak into the frontmatter as a real line break
+    const frontmatterEnd = artifact.indexOf('---', 4)
+    const frontmatter = artifact.slice(0, frontmatterEnd)
+    expect(frontmatter.split('\n').length).toBeLessThanOrEqual(5)
   })
 })
