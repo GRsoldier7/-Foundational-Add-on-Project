@@ -1,0 +1,9 @@
+spec_version: "1.0"
+addon_version: "0.1.0"
+targets: [claude]
+skills:
+  core/adaptive-skill-orchestrator: "^1.0.0"
+  superpowers/systematic-debugging: "^1.0.0"
+  engineering/code-review: "^1.0.0"
+  superpowers/brainstorming: "^1.0.0"
+  superpowers/writing-plans: "^1.0.0"
