@@ -23,6 +23,18 @@ describe('hash', () => {
     const h2 = hashSkillSources('core', 'spec', ['tool2'])
     expect(h1).not.toBe(h2)
   })
+
+  test('hashSkillSources is stable across toolJsons reordering', () => {
+    const h1 = hashSkillSources('core', 'spec', ['{"a":1}', '{"b":2}'])
+    const h2 = hashSkillSources('core', 'spec', ['{"b":2}', '{"a":1}'])
+    expect(h1).toBe(h2)
+  })
+
+  test('hashSkillSources is stable across spec JSON key reordering', () => {
+    const h1 = hashSkillSources('core', '{"name":"x","version":"1.0"}', [])
+    const h2 = hashSkillSources('core', '{"version":"1.0","name":"x"}', [])
+    expect(h1).toBe(h2)
+  })
 })
 
 describe('tokenizer', () => {
@@ -88,5 +100,10 @@ describe('sentinel', () => {
     expect(blocks).toContain('skill-a')
     expect(blocks).toContain('skill-b')
     expect(blocks).toHaveLength(2)
+  })
+
+  test('insertOrReplace throws when start tag exists but end tag missing', () => {
+    const corrupted = `${startTag('skill')}\ncontent without end tag\n`
+    expect(() => insertOrReplace(corrupted, 'skill', 'new content')).toThrow(/Corrupted sentinel/)
   })
 })

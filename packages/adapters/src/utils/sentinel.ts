@@ -63,7 +63,7 @@ export function removeBlock(existingContent: string, skillName: string): string 
 
 export function listBlocks(content: string): string[] {
   const blocks: string[] = []
-  const pattern = /<!-- foundation-addon:start:([^>]+) -->/g
+  const pattern = /<!-- foundation-addon:start:([a-z0-9][a-z0-9/_-]*) -->/g
   let match
   while ((match = pattern.exec(content)) !== null) {
     blocks.push(match[1])
