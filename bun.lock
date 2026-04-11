@@ -4,6 +4,9 @@
   "workspaces": {
     "": {
       "name": "foundation-addon",
+      "devDependencies": {
+        "ajv": "^8.18.0",
+      },
     },
     "packages/adapters": {
       "name": "@foundation-addon/adapters",
