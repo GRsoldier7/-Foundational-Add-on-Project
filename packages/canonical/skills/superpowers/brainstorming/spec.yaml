@@ -1,0 +1,25 @@
+spec_version: "1.0"
+name: brainstorming
+version: "1.0.0"
+description: "Collaborative design session — explore intent, propose approaches, get approval before building"
+tier: superpowers
+capabilities:
+  - context_analysis
+  - design_reasoning
+provider_hints:
+  claude:
+    system_prefix: "Explore the design space thoroughly before presenting options."
+    model: claude-opus-4-6
+    max_tokens: 8192
+  codex:
+    model: o4-mini
+trust_tier: T1
+tags:
+  - design
+  - planning
+  - architecture
+  - pre-implementation
+composable: true
+parallel_safe: false
+streaming: false
+author: foundation-addon
