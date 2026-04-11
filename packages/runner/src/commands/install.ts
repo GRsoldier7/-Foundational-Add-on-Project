@@ -50,8 +50,10 @@ export async function runInstall(options: InstallOptions): Promise<void> {
   }
 
   // Backup before install (DD-012)
+  const { randomBytes } = await import('crypto')
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-  const backupDir = join(BACKUP_BASE, timestamp)
+  const suffix = randomBytes(3).toString('hex')
+  const backupDir = join(BACKUP_BASE, `${timestamp}-${suffix}`)
   mkdirSync(backupDir, { recursive: true })
   mkdirSync(targetDir, { recursive: true })
 

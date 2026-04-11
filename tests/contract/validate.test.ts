@@ -30,4 +30,20 @@ describe('lintCore', () => {
     const issues = lintCore(longContent, 'test/skill')
     expect(issues.some(i => i.includes('words'))).toBe(true)
   })
+
+  test('does NOT flag legitimate markdown void elements', () => {
+    const withBr = '## Note\n\nUse <br> to break.\n\nOr <hr> for a divider.'
+    expect(lintCore(withBr, 'test/skill')).toHaveLength(0)
+  })
+
+  test('does NOT flag markdown autolinks', () => {
+    const withAutolink = '## Link\n\nSee <https://example.com> for details.'
+    expect(lintCore(withAutolink, 'test/skill')).toHaveLength(0)
+  })
+
+  test('flags paired XML like <thinking>...</thinking>', () => {
+    const withPaired = '## Think\n\n<thinking>step by step</thinking>\n\nAnswer here.'
+    const issues = lintCore(withPaired, 'test/skill')
+    expect(issues.some(i => i.includes('XML tags'))).toBe(true)
+  })
 })

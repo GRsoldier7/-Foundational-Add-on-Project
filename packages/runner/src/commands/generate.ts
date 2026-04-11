@@ -32,6 +32,14 @@ export interface GenerateOptions {
   force?: boolean
 }
 
+interface GenResult {
+  skillRef: string
+  skillName: string
+  hash: string
+  artifact: string
+  skipped: boolean
+}
+
 export async function runGenerate(options: GenerateOptions): Promise<void> {
   if (options.target !== 'claude') {
     throw new FoundationAddonError({
@@ -47,17 +55,14 @@ export async function runGenerate(options: GenerateOptions): Promise<void> {
     : discoverSkills(options.tier)
 
   const cache = options.force ? {} : loadHashCache()
-  const newCache: Record<string, string> = { ...cache }
 
   const outDir = join(DIST_DIR, 'claude')
   mkdirSync(outDir, { recursive: true })
 
-  let skipped = 0
-  let generated = 0
-
-  // Parallel generation across all skills (DD-014)
-  await Promise.all(
-    skillRefs.map(async (skillRef) => {
+  // Phase 1: compute hashes and generate artifacts in parallel (pure, no shared state mutation)
+  // Fix I1: collect results, apply to cache sequentially AFTER Promise.all resolves
+  const results: GenResult[] = await Promise.all(
+    skillRefs.map(async (skillRef): Promise<GenResult> => {
       const loaded = loadSkill(skillRef)
       const toolContents = loaded.toolPaths.map((p) => readFileSync(p, 'utf8'))
       const currentHash = hashSkillSources(
@@ -67,17 +72,43 @@ export async function runGenerate(options: GenerateOptions): Promise<void> {
       )
 
       if (!options.force && cache[skillRef] === currentHash) {
-        skipped++
-        return
+        return {
+          skillRef,
+          skillName: loaded.spec.name,
+          hash: currentHash,
+          artifact: '',
+          skipped: true,
+        }
       }
 
       const artifact = adapter.generateArtifact(loaded.spec, loaded.core)
-      const outFile = join(outDir, `${loaded.spec.name}.md`)
-      writeFileSync(outFile, artifact, 'utf8')
-      newCache[skillRef] = currentHash
-      generated++
+      return {
+        skillRef,
+        skillName: loaded.spec.name,
+        hash: currentHash,
+        artifact,
+        skipped: false,
+      }
     })
   )
+
+  // Phase 2: apply results sequentially (no race conditions)
+  // Fix I2: newCache only contains entries for skills we actually processed,
+  // preventing stale entries for deleted skills from lingering forever.
+  const newCache: Record<string, string> = {}
+  let skipped = 0
+  let generated = 0
+
+  for (const result of results) {
+    newCache[result.skillRef] = result.hash
+    if (result.skipped) {
+      skipped++
+    } else {
+      const outFile = join(outDir, `${result.skillName}.md`)
+      writeFileSync(outFile, result.artifact, 'utf8')
+      generated++
+    }
+  }
 
   saveHashCache(newCache)
 

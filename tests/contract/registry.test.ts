@@ -57,4 +57,21 @@ describe('registry', () => {
     expect(skills.length).toBeGreaterThan(0)
     expect(skills).toContain('core/test-fixture-skill')
   })
+
+  test('resolveSkillDir rejects path traversal in tier', () => {
+    expect(() => loadSkill('../../../etc/passwd/foo')).toThrow(/Invalid skill reference/)
+  })
+
+  test('resolveSkillDir rejects dots in name (no parent-dir escape)', () => {
+    // 'core/..' would parse as two parts and could escape without regex
+    expect(() => loadSkill('core/..')).toThrow(/Invalid skill reference/)
+  })
+
+  test('resolveSkillDir rejects single-name with no tier', () => {
+    expect(() => loadSkill('nonesuch')).toThrow(/tier\/skill-name/)
+  })
+
+  test('resolveSkillDir rejects slug with slashes', () => {
+    expect(() => loadSkill('core/sub/dir')).toThrow(/Invalid skill reference/)
+  })
 })

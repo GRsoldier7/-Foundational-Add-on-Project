@@ -1,5 +1,6 @@
 import { existsSync } from 'fs'
 import { resolve, dirname } from 'path'
+import { FoundationAddonError, ErrorCode } from '../errors.js'
 
 interface Check {
   name: string
@@ -85,6 +86,10 @@ export async function runDoctor(): Promise<void> {
   console.log(`\n  ${checks.length} checks — ${failures} failure(s), ${warnings} warning(s)\n`)
 
   if (failures > 0) {
-    throw new Error(`Doctor found ${failures} critical failure(s)`)
+    throw new FoundationAddonError({
+      code: ErrorCode.ConfigError,
+      message: `Doctor found ${failures} critical failure(s)`,
+      fix: 'Review the ❌ items above and fix them before running other commands.',
+    })
   }
 }

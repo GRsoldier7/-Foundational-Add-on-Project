@@ -59,9 +59,14 @@ export function lintCore(core: string, skillRef: string): string[] {
   const issues: string[] = []
   const wordCount = core.split(/\s+/).filter(Boolean).length
 
-  if (/<[a-z][\w-]*>/i.test(core)) {
+  // Only flag paired XML tags (opening + closing). Void elements like <br> <hr>
+  // <img> <wbr> are legitimate markdown. Also allow autolinks <https://...>.
+  const PAIRED_TAG_RE = /<([a-z][\w-]*)(?:\s[^>]*)?>[\s\S]*?<\/\1\s*>/i
+  const MARKDOWN_SAFE = /^(br|hr|img|wbr)$/i
+  const pairedMatch = core.match(PAIRED_TAG_RE)
+  if (pairedMatch && !MARKDOWN_SAFE.test(pairedMatch[1]!)) {
     issues.push(
-      `${skillRef}: core.md contains XML tags — move provider-specific syntax to provider_hints.{provider}.system_prefix`
+      `${skillRef}: core.md contains XML tags (<${pairedMatch[1]}>) — move provider-specific syntax to provider_hints.{provider}.system_prefix`
     )
   }
 
