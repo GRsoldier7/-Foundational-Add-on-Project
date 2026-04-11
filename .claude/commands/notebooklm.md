@@ -53,44 +53,61 @@ source ~/.notebooklm-venv/bin/activate
 pip install "notebooklm-py[browser]" && playwright install chromium
 ```
 
-### Authentication
-Claude writes and runs a Playwright login script automatically — user only signs in to Google:
-```python
-# nlm_login.py — auto-detects login completion
-import asyncio, json
-from pathlib import Path
-from playwright.async_api import async_playwright
+### Authentication — IMPORTANT: Playwright is BROKEN on macOS
 
-STORAGE_DIR = Path.home() / ".notebooklm"
-STORAGE_FILE = STORAGE_DIR / "storage_state.json"
+Google blocks sign-in from Playwright-controlled browsers ("Couldn't sign you in — This browser or app may not be secure"). **Do NOT use the Playwright nlm_login.py approach.** Use `browser_cookie3` instead, which reads from the existing Chrome session via macOS Keychain.
 
-async def main():
-    STORAGE_DIR.mkdir(exist_ok=True)
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context()
-        page = await context.new_page()
-        await page.goto("https://notebooklm.google.com/")
-        print("Sign in to Google in the Chrome window.")
-        try:
-            await page.wait_for_selector(
-                "mat-sidenav-container, notebook-list, .notebooks-container",
-                timeout=300_000)
-        except Exception:
-            for _ in range(150):
-                if "notebooklm.google.com" in page.url and "accounts.google.com" not in page.url:
-                    break
-                await asyncio.sleep(2)
-        await asyncio.sleep(3)
-        storage = await context.storage_state()
-        STORAGE_FILE.write_text(json.dumps(storage, indent=2))
-        print(f"Session saved to {STORAGE_FILE}")
-        await browser.close()
-
-asyncio.run(main())
+**Install once:**
+```bash
+~/.notebooklm-venv/bin/pip install browser_cookie3
 ```
 
-**NEVER** use `notebooklm login` directly — requires interactive terminal input unavailable in Claude Code.
+**Re-auth script** (run whenever `notebooklm auth check` fails — cookies expire 7-30 days):
+```python
+# scripts/notebooklm-auth.py — reads Chrome cookies via macOS Keychain
+import json
+from pathlib import Path
+
+try:
+    import browser_cookie3
+except ImportError:
+    print("Run: ~/.notebooklm-venv/bin/pip install browser_cookie3")
+    raise
+
+STORAGE_FILE = Path.home() / ".notebooklm" / "storage_state.json"
+STORAGE_FILE.parent.mkdir(exist_ok=True)
+
+print("Reading Chrome cookies (may prompt for Keychain access)...")
+jar = browser_cookie3.chrome(domain_name=".google.com")
+
+cookies = []
+for c in jar:
+    cookies.append({
+        "name": c.name, "value": c.value, "domain": c.domain,
+        "path": c.path if c.path else "/",
+        "expires": int(c.expires) if c.expires else -1,
+        "httpOnly": bool(c.has_nonstandard_attr("HttpOnly")),
+        "secure": bool(c.secure), "sameSite": "Lax",
+    })
+
+google_cookies = [c for c in cookies if "google" in c["domain"]]
+sid = [c for c in google_cookies if c["name"] == "SID"]
+print(f"Google cookies: {len(google_cookies)}, SID: {len(sid)}")
+
+STORAGE_FILE.write_text(json.dumps({"cookies": google_cookies, "origins": []}, indent=2))
+print(f"Saved to {STORAGE_FILE}")
+```
+
+**Run with venv Python:**
+```bash
+source ~/.notebooklm-venv/bin/activate
+~/.notebooklm-venv/bin/python3 scripts/notebooklm-auth.py
+notebooklm auth check   # should show SID cookie ✓
+```
+
+**Requirements:** Chrome must have Google signed in. Script saved at `scripts/notebooklm-auth.py` in ObsidianHomeOrchestrator repo.
+
+**NEVER** use `notebooklm login` directly — requires interactive terminal. **NEVER** use the old Playwright script — Google blocks it.
 
 ---
 
@@ -142,7 +159,7 @@ notebooklm download audio ./podcast.mp3
 
 | Case | Symptom | Fix |
 |------|---------|-----|
-| Auth expired | SID cookie missing | Re-run nlm_login.py |
+| Auth expired | SID cookie missing | Re-run `scripts/notebooklm-auth.py` (browser_cookie3 method) |
 | Source stuck PROCESSING | >10 min | Delete and re-add; DRM PDFs fail silently |
 | Generation 429 | Rate limit error | Wait 10-20 min; never retry within 2 min |
 | CLI not found | `command not found` | `source ~/.notebooklm-venv/bin/activate` |
@@ -151,10 +168,11 @@ notebooklm download audio ./podcast.mp3
 
 ## Anti-Patterns
 
-1. **Running `notebooklm login` directly** — requires interactive input. Use nlm_login.py.
-2. **Generating before sources are READY** — silently produces incomplete output.
-3. **Parallel generations** — both fail with 429. Always sequential.
-4. **Asking user to run commands** — skill must be fully automated. User only signs in to Google.
+1. **Using the Playwright login script** — Google blocks it on macOS with "This browser may not be secure". Use `browser_cookie3` / `scripts/notebooklm-auth.py` instead.
+2. **Running `notebooklm login` directly** — requires interactive terminal input unavailable in Claude Code.
+3. **Generating before sources are READY** — silently produces incomplete output.
+4. **Parallel generations** — both fail with 429. Always sequential.
+5. **Asking user to run commands** — skill should be fully automated. User only needs Chrome signed in to Google.
 
 ---
 
