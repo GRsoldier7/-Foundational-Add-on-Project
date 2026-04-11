@@ -5,7 +5,7 @@ import { runGenerate } from '../../packages/runner/src/commands/generate'
 
 const DIST_CLAUDE = resolve(process.cwd(), 'dist/claude')
 const CACHE_DIR = resolve(process.cwd(), 'packages/canonical/.cache')
-const FIXTURE_SKILL = 'core/test-fixture-skill'
+const FIXTURE_SKILL = 'core/adaptive-skill-orchestrator'
 
 afterEach(() => {
   if (existsSync(DIST_CLAUDE)) rmSync(DIST_CLAUDE, { recursive: true, force: true })
