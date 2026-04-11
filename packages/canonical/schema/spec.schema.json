@@ -69,7 +69,7 @@
         "system_prefix": { "type": "string" },
         "system_suffix": { "type": "string" },
         "max_tokens": { "type": "integer", "minimum": 1 },
-        "temperature": { "type": "number", "minimum": 0, "maximum": 1 }
+        "temperature": { "type": "number", "minimum": 0, "maximum": 2 }
       }
     }
   }

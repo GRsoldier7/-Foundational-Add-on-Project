@@ -12,6 +12,7 @@
     "parameters": {
       "type": "object",
       "required": ["type", "properties"],
+      "additionalProperties": false,
       "properties": {
         "type": { "type": "string", "enum": ["object"] },
         "properties": { "type": "object" },
