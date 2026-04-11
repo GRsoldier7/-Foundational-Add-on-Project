@@ -1,0 +1,12 @@
+{
+  "name": "foundation-addon",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "build": "bun build packages/runner/src/cli.ts --compile --outfile foundation-addon",
+    "test": "bun test",
+    "validate": "bun run packages/runner/src/cli.ts validate",
+    "generate": "bun run packages/runner/src/cli.ts generate"
+  }
+}
