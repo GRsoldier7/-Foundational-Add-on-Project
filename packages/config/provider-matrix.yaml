@@ -1,0 +1,33 @@
+# Which capabilities each provider supports
+# mcp_supported: flip to true when a provider ships MCP protocol support
+
+spec_version: "1.0"
+
+providers:
+  claude:
+    mcp_supported: true
+    function_calling: true
+    streaming: true
+    vision: true
+    tool_format: anthropic
+
+  codex:
+    mcp_supported: false
+    function_calling: true
+    streaming: true
+    vision: false
+    tool_format: openai
+
+  qwen:
+    mcp_supported: false
+    function_calling: true
+    streaming: true
+    vision: false
+    tool_format: openai
+
+  gemini:
+    mcp_supported: false
+    function_calling: true
+    streaming: true
+    vision: true
+    tool_format: gemini
