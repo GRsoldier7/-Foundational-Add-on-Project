@@ -1,0 +1,34 @@
+# Permission tiers and trust levels
+
+spec_version: "1.0"
+
+trust_tiers:
+  T1:
+    name: Sandboxed
+    capabilities: [filesystem_read_declared, https_get]
+    description: "Read-only filesystem access to declared paths only. HTTPS GET requests only."
+
+  T2:
+    name: Standard
+    capabilities: [filesystem_read_any, https_any, tool_use]
+    description: "File read (any path), full HTTPS, tool use via JSON Schema tools."
+
+  T3:
+    name: Extended
+    capabilities: [filesystem_read_any, filesystem_write_declared, subprocess_no_shell, https_any, tool_use]
+    description: "File read + write to declared paths. Subprocess execution (no shell). Full HTTPS."
+    requires_review: true
+
+  T4:
+    name: Full System
+    capabilities: [unrestricted]
+    description: "Unrestricted system access. Requires explicit user approval at runtime."
+    requires_runtime_approval: true
+
+backups:
+  max_backups: 7          # Auto-prune to this many most-recent backups
+  backup_dir: .foundation-addon/backups
+
+audit:
+  enabled: true           # Always on — never opt-out
+  file: .foundation-addon/audit.jsonl

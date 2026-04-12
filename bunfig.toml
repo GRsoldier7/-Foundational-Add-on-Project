@@ -1,0 +1,2 @@
+# Foundation AddOn — Bun workspace config
+# Dependencies are pinned by bun.lock; no bunfig overrides needed for install or test.

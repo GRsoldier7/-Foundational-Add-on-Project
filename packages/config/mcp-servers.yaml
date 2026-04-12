@@ -1,0 +1,109 @@
+# MCP server configurations
+# Migrated and enhanced from mcp-config/recommended-servers.json
+
+spec_version: "1.0"
+
+tiers:
+  tier1_core: "Install first — zero API keys, universal value"
+  tier2_enhanced: "High value, some require free API keys"
+  tier3_specialist: "Domain-specific power tools"
+
+servers:
+  context7:
+    tier: tier1_core
+    why: "Fetches up-to-date, version-specific docs. Eliminates hallucinated API syntax."
+    install: "npx -y @upstash/context7-mcp@latest"
+    api_key_required: false
+    command: npx
+    args: ["-y", "@upstash/context7-mcp@latest"]
+
+  filesystem:
+    tier: tier1_core
+    why: "Sandboxed file operations. 14 tools for read/write/search/move."
+    install: "npx -y @modelcontextprotocol/server-filesystem <allowed-dirs>"
+    api_key_required: false
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-filesystem"]
+
+  sequential-thinking:
+    tier: tier1_core
+    why: "Structured problem-solving. Prevents jumping to conclusions on hard problems."
+    api_key_required: false
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+
+  git:
+    tier: tier1_core
+    why: "Native git operations — status, diffs, commits, branches, log."
+    install: "uvx mcp-server-git"
+    api_key_required: false
+    command: uvx
+    args: ["mcp-server-git"]
+
+  playwright:
+    tier: tier1_core
+    why: "Browser automation via accessibility tree. Navigate, click, fill forms, capture screenshots."
+    install: "npx -y @playwright/mcp@latest"
+    api_key_required: false
+    command: npx
+    args: ["-y", "@playwright/mcp@latest"]
+
+  memory:
+    tier: tier1_core
+    why: "Persistent knowledge graph as JSONL. Remembers decisions and conventions across sessions."
+    api_key_required: false
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-memory"]
+
+  fetch:
+    tier: tier1_core
+    why: "Lightweight URL fetcher — converts HTML to clean markdown."
+    install: "uvx mcp-server-fetch"
+    api_key_required: false
+    command: uvx
+    args: ["mcp-server-fetch"]
+
+  github:
+    tier: tier2_enhanced
+    why: "Full GitHub integration — PRs, issues, Actions, code search."
+    api_key_required: true
+    api_key_env: GITHUB_PERSONAL_ACCESS_TOKEN
+
+  tavily:
+    tier: tier2_enhanced
+    why: "AI-optimized web search. Purpose-built for developer queries."
+    api_key_required: true
+    api_key_env: TAVILY_API_KEY
+
+  postgres:
+    tier: tier2_enhanced
+    why: "Direct SQL execution and schema inspection against PostgreSQL."
+    api_key_required: false
+    warning: "Use DATABASE_URL env var, never hardcode credentials in args"
+
+  bitwarden:
+    tier: tier2_enhanced
+    why: "Secure credential retrieval from self-hosted Vaultwarden. Scoped dev vault only."
+    api_key_required: false
+
+  qdrant:
+    tier: tier3_specialist
+    why: "Vector storage for semantic skill search. Required for future skill search command."
+    api_key_required: false
+
+  docker:
+    tier: tier3_specialist
+    why: "Container lifecycle management — build, run, inspect, manage containers."
+    api_key_required: false
+
+  sentry:
+    tier: tier3_specialist
+    why: "Error tracking — retrieves stack traces, error frequencies, proposes fixes using repo context."
+    api_key_required: true
+    api_key_env: SENTRY_AUTH_TOKEN
+
+  firecrawl:
+    tier: tier3_specialist
+    why: "Advanced web scraping with JS rendering. Handles SPAs and dynamic sites."
+    api_key_required: true
+    api_key_env: FIRECRAWL_API_KEY

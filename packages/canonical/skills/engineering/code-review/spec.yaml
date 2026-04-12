@@ -1,0 +1,41 @@
+spec_version: "1.0"
+name: code-review
+version: "1.0.0"
+description: "Expert code review for correctness, security, performance, and maintainability"
+tier: engineering
+inputs:
+  - name: code
+    type: string
+    required: true
+    description: "Code to review — inline content or file path"
+  - name: focus
+    type: enum
+    values:
+      - security
+      - performance
+      - correctness
+      - all
+    default: all
+capabilities:
+  - code_analysis
+  - security_scanning
+  - file_read
+tools:
+  - tools/read-file.json
+provider_hints:
+  claude:
+    system_prefix: "Analyze the code thoroughly before presenting your review."
+    model: claude-opus-4-6
+    max_tokens: 8192
+  codex:
+    model: o4-mini
+trust_tier: T2
+tags:
+  - review
+  - security
+  - quality
+  - correctness
+composable: true
+parallel_safe: false
+streaming: false
+author: foundation-addon

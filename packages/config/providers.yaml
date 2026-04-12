@@ -1,0 +1,33 @@
+# LLM provider endpoints and model defaults
+# Auth values are NEVER stored here — reference env var names only
+
+spec_version: "1.0"
+
+telemetry:
+  enabled: false          # Opt-in required. See spec Section 13.
+  webhook_url: null       # Optional: POST events to n8n / home server
+
+providers:
+  claude:
+    api_key_env: ANTHROPIC_API_KEY
+    default_model: claude-opus-4-6
+    context_limit_tokens: 200000
+    rate_limit_rpm: 60
+
+  codex:
+    api_key_env: OPENAI_API_KEY
+    default_model: o4-mini
+    context_limit_tokens: 128000
+    rate_limit_rpm: 60
+
+  qwen:
+    api_key_env: QWEN_API_KEY
+    default_model: qwen-max
+    context_limit_tokens: 32000
+    rate_limit_rpm: 60
+
+  gemini:
+    api_key_env: GEMINI_API_KEY
+    default_model: gemini-2.0-flash
+    context_limit_tokens: 1000000
+    rate_limit_rpm: 60

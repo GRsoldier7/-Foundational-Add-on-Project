@@ -49,3 +49,13 @@ vaultwarden/caddy-data/
 vaultwarden/caddy-config/
 vaultwarden/backups/
 vaultwarden/*.log
+
+# Foundation AddOn generated artifacts — never commit
+dist/
+.foundation-addon/
+packages/canonical/.cache/
+
+# Build output
+foundation-addon
+foundation-addon.exe
+packages/*/dist/

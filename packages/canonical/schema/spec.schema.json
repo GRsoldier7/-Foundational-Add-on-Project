@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://foundation-addon/spec.schema.json",
+  "title": "SkillSpec",
+  "type": "object",
+  "required": ["spec_version", "name", "version", "description", "tier", "capabilities", "trust_tier", "author"],
+  "additionalProperties": false,
+  "properties": {
+    "spec_version": { "type": "string", "enum": ["1.0"] },
+    "name": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+    "description": { "type": "string", "minLength": 10, "maxLength": 200 },
+    "tier": {
+      "type": "string",
+      "enum": ["core", "engineering", "gstack", "strategy", "superpowers", "tech"]
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["string", "number", "boolean", "enum", "image", "audio", "file"] },
+          "required": { "type": "boolean", "default": false },
+          "description": { "type": "string" },
+          "values": { "type": "array", "items": { "type": "string" } },
+          "default": {}
+        }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "tools": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^tools/[a-z][a-z0-9-]*\\.json$" }
+    },
+    "depends_on": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z]+/[a-z][a-z0-9-]*$" }
+    },
+    "provider_hints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "claude": { "$ref": "#/definitions/ProviderHint" },
+        "codex": { "$ref": "#/definitions/ProviderHint" },
+        "qwen": { "$ref": "#/definitions/ProviderHint" },
+        "gemini": { "$ref": "#/definitions/ProviderHint" }
+      }
+    },
+    "trust_tier": { "type": "string", "enum": ["T1", "T2", "T3", "T4"] },
+    "tags": { "type": "array", "items": { "type": "string" } },
+    "composable": { "type": "boolean" },
+    "parallel_safe": { "type": "boolean" },
+    "streaming": { "type": "boolean" },
+    "author": { "type": "string", "minLength": 1 }
+  },
+  "definitions": {
+    "ProviderHint": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model": { "type": "string" },
+        "system_prefix": { "type": "string" },
+        "system_suffix": { "type": "string" },
+        "max_tokens": { "type": "integer", "minimum": 1 },
+        "temperature": { "type": "number", "minimum": 0, "maximum": 2 }
+      }
+    }
+  }
+}

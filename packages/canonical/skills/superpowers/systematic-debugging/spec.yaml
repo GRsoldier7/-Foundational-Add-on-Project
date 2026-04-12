@@ -1,0 +1,33 @@
+spec_version: "1.0"
+name: systematic-debugging
+version: "1.0.0"
+description: "Four-phase root cause analysis for any bug, test failure, or unexpected behavior"
+tier: superpowers
+inputs:
+  - name: error_description
+    type: string
+    required: true
+    description: "The error message, test failure, or unexpected behavior to debug"
+  - name: context
+    type: string
+    required: false
+    description: "Relevant code, stack traces, or environment details"
+capabilities:
+  - code_analysis
+  - file_read
+provider_hints:
+  claude:
+    system_prefix: "Work through each phase methodically before presenting findings."
+    model: claude-opus-4-6
+    max_tokens: 8192
+  codex:
+    model: o4-mini
+trust_tier: T2
+tags:
+  - debugging
+  - root-cause
+  - investigation
+composable: true
+parallel_safe: false
+streaming: false
+author: foundation-addon

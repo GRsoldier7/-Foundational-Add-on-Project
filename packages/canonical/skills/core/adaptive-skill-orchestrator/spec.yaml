@@ -1,0 +1,26 @@
+spec_version: "1.0"
+name: adaptive-skill-orchestrator
+version: "1.0.0"
+description: "Intelligent dispatch layer that analyzes requests and routes to optimal skill combinations"
+tier: core
+capabilities:
+  - routing
+  - skill_invocation
+  - context_analysis
+provider_hints:
+  claude:
+    system_prefix: "Use structured reasoning to analyze which skills apply before responding."
+    model: claude-opus-4-6
+    max_tokens: 4096
+  codex:
+    model: o4-mini
+    system_prefix: "Think step by step about which skills and approaches apply."
+trust_tier: T2
+tags:
+  - orchestration
+  - routing
+  - meta
+composable: false
+parallel_safe: false
+streaming: false
+author: foundation-addon
