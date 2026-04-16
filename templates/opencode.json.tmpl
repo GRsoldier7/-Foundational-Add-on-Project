@@ -1,0 +1,27 @@
+{
+  "$schema": "https://opencode.ai/config.schema.json",
+  "_generated_by": "Foundation AddOn init-project.sh",
+  "_sync_hash": "{{FOUNDATION_HASH}}",
+  "theme": "catppuccin",
+  "provider": {
+    "{{PRIMARY_PROVIDER}}": {
+      "model": "{{PRIMARY_MODEL}}"
+    }
+  },
+  "models": {
+    "default": {
+      "provider": "{{PRIMARY_PROVIDER}}",
+      "model": "{{PRIMARY_MODEL}}"
+    }
+  },
+  "instructions": [
+    "Follow the conventions and principles defined in AGENTS.md at the project root.",
+    "Verify before claiming completion — run commands and show evidence.",
+    "Design before building — ask clarifying questions when underspecified.",
+    "Test before shipping — write a failing test first (RED-GREEN-REFACTOR).",
+    "Systematic debugging only — reproduce, hypothesize, verify, fix.",
+    "Never expose secrets in code, config, or output.",
+    "Never fabricate data, APIs, or function signatures — label confidence levels."
+  ],
+  "mcpServers": {}
+}
