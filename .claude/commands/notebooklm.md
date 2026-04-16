@@ -47,67 +47,53 @@ allowed-tools: Bash
 ## Environment Setup
 
 ### First-Time Install
+
+**macOS / Linux (bash/zsh):**
 ```bash
 python3 -m venv ~/.notebooklm-venv
 source ~/.notebooklm-venv/bin/activate
-pip install "notebooklm-py[browser]" && playwright install chromium
+pip install "notebooklm-py[browser]" browser_cookie3 && playwright install chromium
 ```
 
-### Authentication — IMPORTANT: Playwright is BROKEN on macOS
+**Windows (PowerShell):**
 
-Google blocks sign-in from Playwright-controlled browsers ("Couldn't sign you in — This browser or app may not be secure"). **Do NOT use the Playwright nlm_login.py approach.** Use `browser_cookie3` instead, which reads from the existing Chrome session via macOS Keychain.
+```powershell
+python3 -m venv ~/.notebooklm-venv
+~/.notebooklm-venv/Scripts/Activate.ps1
+pip install "notebooklm-py[browser]" browser_cookie3; playwright install chromium
+```
 
-**Install once:**
+**Linux extra deps** (if `browser_cookie3` fails on GNOME/KDE):
+
 ```bash
-~/.notebooklm-venv/bin/pip install browser_cookie3
+pip install secretstorage jeepney
 ```
 
-**Re-auth script** (run whenever `notebooklm auth check` fails — cookies expire 7-30 days):
-```python
-# scripts/notebooklm-auth.py — reads Chrome cookies via macOS Keychain
-import json
-from pathlib import Path
+### Authentication — IMPORTANT: Playwright sign-in is BROKEN
 
-try:
-    import browser_cookie3
-except ImportError:
-    print("Run: ~/.notebooklm-venv/bin/pip install browser_cookie3")
-    raise
+Google blocks sign-in from Playwright-controlled browsers ("Couldn't sign you in — This browser or app may not be secure"). **Do NOT use the Playwright login approach.** Use `browser_cookie3` instead — it reads directly from Chrome's OS credential store (macOS Keychain / Windows DPAPI / Linux Secret Service). Works cross-platform with the same script.
 
-STORAGE_FILE = Path.home() / ".notebooklm" / "storage_state.json"
-STORAGE_FILE.parent.mkdir(exist_ok=True)
+**Re-auth script** — run whenever `notebooklm auth check` fails (cookies expire 7-30 days):
 
-print("Reading Chrome cookies (may prompt for Keychain access)...")
-jar = browser_cookie3.chrome(domain_name=".google.com")
+Script is at `scripts/notebooklm-auth.py` in the ObsidianHomeOrchestrator repo. To run:
 
-cookies = []
-for c in jar:
-    cookies.append({
-        "name": c.name, "value": c.value, "domain": c.domain,
-        "path": c.path if c.path else "/",
-        "expires": int(c.expires) if c.expires else -1,
-        "httpOnly": bool(c.has_nonstandard_attr("HttpOnly")),
-        "secure": bool(c.secure), "sameSite": "Lax",
-    })
-
-google_cookies = [c for c in cookies if "google" in c["domain"]]
-sid = [c for c in google_cookies if c["name"] == "SID"]
-print(f"Google cookies: {len(google_cookies)}, SID: {len(sid)}")
-
-STORAGE_FILE.write_text(json.dumps({"cookies": google_cookies, "origins": []}, indent=2))
-print(f"Saved to {STORAGE_FILE}")
-```
-
-**Run with venv Python:**
+**macOS / Linux:**
 ```bash
 source ~/.notebooklm-venv/bin/activate
-~/.notebooklm-venv/bin/python3 scripts/notebooklm-auth.py
+python3 scripts/notebooklm-auth.py
 notebooklm auth check   # should show SID cookie ✓
 ```
 
-**Requirements:** Chrome must have Google signed in. Script saved at `scripts/notebooklm-auth.py` in ObsidianHomeOrchestrator repo.
+**Windows (PowerShell):**
+```powershell
+~/.notebooklm-venv/Scripts/Activate.ps1
+python3 scripts/notebooklm-auth.py
+notebooklm auth check
+```
 
-**NEVER** use `notebooklm login` directly — requires interactive terminal. **NEVER** use the old Playwright script — Google blocks it.
+**Requirement:** Chrome must be signed in to Google on the machine you're running from. Chrome can be closed — the script only reads the cookie database, not a live browser.
+
+**NEVER** use `notebooklm login` directly — requires interactive terminal. **NEVER** use the old Playwright script — Google blocks it on all platforms.
 
 ---
 
