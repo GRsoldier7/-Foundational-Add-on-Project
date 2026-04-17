@@ -1,14 +1,15 @@
 ---
 name: project-sync
 description: |
-  Auto-update cross-platform AI configs (AGENTS.md, opencode.json, settings.json) from the
+  Auto-update cross-platform AI configs (AGENTS.md, GEMINI.md, opencode.json, settings.json,
+  .ai-memory/project-profile.md) from the
   Foundation AddOn source of truth. Detects stale sync, shows a diff summary, regenerates
   configs while preserving user-customized sections, and updates the sync manifest. Use when
   starting work on a project that hasn't been synced recently, or after the Foundation AddOn
   gains new skills/permissions.
 metadata:
   author: aaron-deyoung
-  version: "1.0"
+  version: "1.1"
   domain-category: core
   adjacent-skills: portable-ai-instructions, adaptive-skill-orchestrator
   last-reviewed: "2026-04-16"
@@ -89,9 +90,13 @@ Run init-project.sh in update mode:
 bash "<foundation-path>/scripts/init-project.sh" --update .
 ```
 
-This regenerates AGENTS.md, opencode.json, and .claude/settings.json while preserving
-any sections the user has customized (wrapped in `<!-- CUSTOM:START -->` / `<!-- CUSTOM:END -->`
-markers).
+This regenerates AGENTS.md, GEMINI.md, opencode.json, .claude/settings.json, and
+.ai-memory/project-profile.md.
+
+- `AGENTS.md`, `GEMINI.md`, and `.ai-memory/project-profile.md` preserve user-customized
+  sections wrapped in `<!-- CUSTOM:START -->` / `<!-- CUSTOM:END -->`.
+- `opencode.json` and `.claude/settings.json` are managed files. Put machine-local or project-local
+  exceptions in `.claude/settings.local.json`, not in the generated base file.
 
 ### Step 5: Verify
 
@@ -103,7 +108,7 @@ Spot-check one generated file to confirm it reflects current Foundation AddOn co
 Ask the user if they want to commit the updated configs:
 
 ```bash
-git add AGENTS.md opencode.json .claude/settings.json .foundation-sync.json
+git add AGENTS.md GEMINI.md opencode.json .claude/settings.json .ai-memory/project-profile.md .foundation-sync.json
 git commit -m "chore: sync cross-platform configs from Foundation AddOn (<new-hash>)"
 ```
 

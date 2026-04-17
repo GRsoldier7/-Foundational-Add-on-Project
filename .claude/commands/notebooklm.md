@@ -17,83 +17,124 @@ description: |
 compatibility: Requires notebooklm-py CLI installed; Google account authenticated; Python 3.10+
 metadata:
   author: aaron-deyoung
-  version: "2.1"
+  version: "3.0"
   domain-category: core
-  adjacent-skills: wrapup, knowledge-management, obsidian-automation-architect
-  last-reviewed: "2026-04-04"
-  review-trigger: "notebooklm-py version bump, Google NotebookLM UI changes that break auth, new artifact type added"
+  adjacent-skills: knowledge-management, data-storytelling, session-optimizer
+  last-reviewed: "2026-04-17"
+  review-trigger: "notebooklm-py version bump, auth flow changes, new artifact type or memory workflow updates"
 allowed-tools: Bash
 ---
 
 ## Composability Contract
 - Input expects: topic, URLs, files, or research query to process
 - Output produces: notebooks, sources, generated artifacts (audio, quiz, slides, etc.)
-- Hands off to: wrapup (session summaries), knowledge-management (vault organization)
+- Hands off to: knowledge-management (vault organization), data-storytelling (artifact framing)
 - Receives from: any skill needing to transform content into audio/visual/study material
+
+---
+
+## CLI Operator Mode
+
+Operate NotebookLM as a deterministic CLI workflow, not an ad-hoc chat tool:
+
+1. **Preflight:** `auth check`, venv activation, context selection.
+2. **Ingest:** add sources with stable titles + wait for READY.
+3. **Generate:** one artifact at a time with explicit instructions.
+4. **Verify:** wait for completion, download, size-check output.
+5. **Persist memory:** append concise outcomes to project memory.
+
+Operator mode requires command-by-command state tracking: notebook id, source ids, artifact ids,
+and output paths must be captured after every step.
+
+---
+
+## NotebookLM Memory Lifecycle
+
+Use this lifecycle for all non-trivial NotebookLM runs:
+
+### 1. Capture
+- Topic, objective, audience, and success criteria.
+- Source list (URLs/files) and trust level notes.
+
+### 2. Distill
+- Artifact outputs (podcast, slides, quiz) with one-line usefulness summary.
+- Key claims that need citation or follow-up verification.
+
+### 3. Store
+- Save a compact session summary in `.ai-memory/project-profile.md` or a linked run log.
+- Keep only durable facts and decisions, not raw transcript dumps.
+
+### 4. Rehydrate
+- Before next run, read prior memory and reuse notebook where continuity helps.
+- If context diverged, create a new notebook and link the previous one.
+
+Memory lifecycle prevents repeat ingestion and makes recurring workflows reliable.
 
 ---
 
 ## Core Principles
 
-1. **Auth is fragile** — Google cookies expire 7-30 days. Always `notebooklm auth check` first.
+1. **Auth is fragile** — Google cookies expire 7–30 days. Always `notebooklm auth check` first.
 2. **Context required** — Every command except `list`/`create` needs `notebooklm use <id>`.
 3. **Sources must be READY** — Wait with `source wait <id>` before generating.
-4. **Generation is async** — Audio 10-20 min, video 15-45 min. Use `artifact wait`.
+4. **Generation is async** — Audio 10–20 min, video 15–45 min. Use `artifact wait`.
 5. **No parallel generation** — Google rate-limits per notebook. Sequential only.
-6. **Linux path** — activate venv: `source ~/.notebooklm-venv/bin/activate`
+6. **Windows encoding** — Prefix ALL commands with `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`.
 
 ---
 
 ## Environment Setup
 
+**CRITICAL on Windows:** Every `notebooklm` command MUST be prefixed:
+```bash
+source "$HOME/.notebooklm-venv/Scripts/activate" && PYTHONIOENCODING=utf-8 PYTHONUTF8=1 notebooklm <command>
+```
+
 ### First-Time Install
-
-**macOS / Linux (bash/zsh):**
 ```bash
 python3 -m venv ~/.notebooklm-venv
-source ~/.notebooklm-venv/bin/activate
-pip install "notebooklm-py[browser]" browser_cookie3 && playwright install chromium
+source ~/.notebooklm-venv/Scripts/activate  # or bin/activate on Linux/Mac
+pip install "notebooklm-py[browser]" && playwright install chromium
 ```
 
-**Windows (PowerShell):**
+### Authentication
+Claude writes and runs a Playwright login script automatically — user only signs in to Google:
+```python
+# nlm_login.py — auto-detects login completion
+import asyncio, json, os
+from pathlib import Path
+from playwright.async_api import async_playwright
 
-```powershell
-python3 -m venv ~/.notebooklm-venv
-~/.notebooklm-venv/Scripts/Activate.ps1
-pip install "notebooklm-py[browser]" browser_cookie3; playwright install chromium
+STORAGE_DIR = Path.home() / ".notebooklm"
+STORAGE_FILE = STORAGE_DIR / "storage_state.json"
+
+async def main():
+    STORAGE_DIR.mkdir(exist_ok=True)
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=False)
+        context = await browser.new_context()
+        page = await context.new_page()
+        await page.goto("https://notebooklm.google.com/")
+        print("Sign in to Google in the Chrome window.")
+        try:
+            await page.wait_for_selector(
+                "mat-sidenav-container, notebook-list, .notebooks-container",
+                timeout=300_000)
+        except Exception:
+            for _ in range(150):
+                if "notebooklm.google.com" in page.url and "accounts.google.com" not in page.url:
+                    break
+                await asyncio.sleep(2)
+        await asyncio.sleep(3)
+        storage = await context.storage_state()
+        STORAGE_FILE.write_text(json.dumps(storage, indent=2))
+        print(f"Session saved to {STORAGE_FILE}")
+        await browser.close()
+
+asyncio.run(main())
 ```
 
-**Linux extra deps** (if `browser_cookie3` fails on GNOME/KDE):
-
-```bash
-pip install secretstorage jeepney
-```
-
-### Authentication — IMPORTANT: Playwright sign-in is BROKEN
-
-Google blocks sign-in from Playwright-controlled browsers ("Couldn't sign you in — This browser or app may not be secure"). **Do NOT use the Playwright login approach.** Use `browser_cookie3` instead — it reads directly from Chrome's OS credential store (macOS Keychain / Windows DPAPI / Linux Secret Service). Works cross-platform with the same script.
-
-**Re-auth script** — run whenever `notebooklm auth check` fails (cookies expire 7-30 days):
-
-Script is at `scripts/notebooklm-auth.py` in the ObsidianHomeOrchestrator repo. To run:
-
-**macOS / Linux:**
-```bash
-source ~/.notebooklm-venv/bin/activate
-python3 scripts/notebooklm-auth.py
-notebooklm auth check   # should show SID cookie ✓
-```
-
-**Windows (PowerShell):**
-```powershell
-~/.notebooklm-venv/Scripts/Activate.ps1
-python3 scripts/notebooklm-auth.py
-notebooklm auth check
-```
-
-**Requirement:** Chrome must be signed in to Google on the machine you're running from. Chrome can be closed — the script only reads the cookie database, not a live browser.
-
-**NEVER** use `notebooklm login` directly — requires interactive terminal. **NEVER** use the old Playwright script — Google blocks it on all platforms.
+**NEVER** use `notebooklm login` directly — it requires interactive terminal input unavailable in Claude Code.
 
 ---
 
@@ -119,24 +160,32 @@ notebooklm auth check
 
 ## Standard Workflows
 
-### Session Wrapup to AI Brain (primary use case)
-```bash
-source ~/.notebooklm-venv/bin/activate
-notebooklm auth check
-notebooklm use <brain_notebook_id>
-notebooklm source add "/tmp/session-summary-YYYY-MM-DD.md"
-```
-
 ### Research-to-Podcast
 ```bash
 notebooklm auth check
 notebooklm create "Research: [topic]"
 notebooklm use <id>
-notebooklm source add "https://..."
-notebooklm source wait <source_id>
+notebooklm source add "https://..."     # for each URL
+notebooklm source wait <source_id>      # wait for processing
 notebooklm generate audio "Focus on key decisions"
 notebooklm artifact wait <artifact_id>
 notebooklm download audio ./podcast.mp3
+```
+
+### Session Wrapup to AI Brain
+```bash
+notebooklm auth check
+notebooklm use <brain_notebook_id>
+notebooklm source add "/path/to/session-summary.md"
+```
+
+### Multi-Format from One Notebook
+```bash
+notebooklm generate audio "Executive summary"    # sequential only
+notebooklm artifact wait <id>
+notebooklm generate quiz --difficulty hard
+notebooklm artifact wait <id>
+notebooklm generate slide-deck --format presenter
 ```
 
 ---
@@ -145,27 +194,46 @@ notebooklm download audio ./podcast.mp3
 
 | Case | Symptom | Fix |
 |------|---------|-----|
-| Auth expired | SID cookie missing | Re-run `scripts/notebooklm-auth.py` (browser_cookie3 method) |
-| Source stuck PROCESSING | >10 min | Delete and re-add; DRM PDFs fail silently |
-| Generation 429 | Rate limit error | Wait 10-20 min; never retry within 2 min |
-| CLI not found | `command not found` | `source ~/.notebooklm-venv/bin/activate` |
+| Auth expired | SID cookie missing | Re-run nlm_login.py |
+| Source stuck PROCESSING | >10 min in processing state | Delete and re-add; DRM PDFs fail silently |
+| Generation 429 | Rate limit error | Wait 10–20 min; never retry within 2 min |
+| Download fails | Artifact shows completed | Check file extension matches type (audio→.mp3) |
+| CLI not found | `command not found` | Activate venv or use full path |
+| RPC error on `use` | "RPC returned null" | Notebook may not exist; try `notebooklm list` |
+| Source add fails | "Failed to get SOURCE_ID" | Create new notebook with `-n <id>` flag |
 
 ---
 
 ## Anti-Patterns
 
-1. **Using the Playwright login script** — Google blocks it on macOS with "This browser may not be secure". Use `browser_cookie3` / `scripts/notebooklm-auth.py` instead.
-2. **Running `notebooklm login` directly** — requires interactive terminal input unavailable in Claude Code.
+1. **Running `notebooklm login` directly** — requires interactive input. Use nlm_login.py.
+2. **Missing PYTHONIOENCODING on Windows** — causes UnicodeEncodeError. Always prefix.
 3. **Generating before sources are READY** — silently produces incomplete output.
 4. **Parallel generations** — both fail with 429. Always sequential.
-5. **Asking user to run commands** — skill should be fully automated. User only needs Chrome signed in to Google.
+5. **Embedding full storage_state.json in Co-work** — wastes ~1,700 tokens. Strip to 3 domains.
+6. **Asking user to run commands** — skill must be fully automated. User only signs in to Google.
 
 ---
 
 ## Quality Gates
 
-- [ ] `notebooklm auth check` passes with SID cookie before any workflow
+- [ ] Auth check passes with SID cookie before any workflow
 - [ ] Notebook context set before source/generate commands
 - [ ] All sources confirmed READY before generating
 - [ ] Artifact confirmed COMPLETED before downloading
+- [ ] Download file exists and is non-zero bytes
+- [ ] Operator state tracked (`notebook_id`, `source_ids`, `artifact_ids`, output paths)
+- [ ] Memory lifecycle completed (capture -> distill -> store -> rehydrate)
 - [ ] Auth flow was fully automated — user only signed in to Google
+
+---
+
+## Self-Evaluation
+
+Before presenting any NotebookLM workflow:
+[ ] Did I prefix all commands with PYTHONIOENCODING=utf-8 on Windows?
+[ ] Did I check auth before starting?
+[ ] Did I set notebook context with `use`?
+[ ] Am I waiting for sources before generating?
+[ ] Am I generating sequentially, not in parallel?
+[ ] Am I handling the case where `use` fails with RPC error?

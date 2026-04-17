@@ -1,6 +1,6 @@
 # Foundation AddOn Project
 
-A workspace addon that gives any project instant access to 60+ AI skills, battle-tested permissions, and MCP server configs. Add it to your VS Code workspace as a second root and every AI coding session starts with a full toolkit.
+A workspace addon that gives any project instant access to 60+ AI skills, battle-tested permissions, and MCP server configs. The Foundation repo is a curated portable subset with selected specialty skills synced from the canonical [`My_AI_Skills`](https://github.com/GRsoldier7/My_AI_Skills) repo.
 
 ## Supported Tools
 
@@ -8,6 +8,7 @@ A workspace addon that gives any project instant access to 60+ AI skills, battle
 |------|------------|---------------|--------|
 | **Claude Code** | `CLAUDE.md` | Native (60+ skills via `/slash-commands`) | Full support |
 | **Codex / ChatGPT** | `AGENTS.md` | Inline instructions (top 15 skills translated) | Full support |
+| **Gemini CLI** | `GEMINI.md` | Inline instructions tuned for Gemini workflows | Full support |
 | **Opencode** | `opencode.json` | Inline instructions + model routing | Full support |
 | **Cursor** | `.cursorrules` | Coding patterns only | Partial |
 | **GitHub Copilot** | `.github/copilot-instructions.md` | Brief standards | Partial |
@@ -16,7 +17,7 @@ A workspace addon that gives any project instant access to 60+ AI skills, battle
 
 **Step 1:** Clone this repo alongside your project:
 ```bash
-git clone https://github.com/GRsoldier7/Foundation_AddOn_Project.git "! Foundation_AddOn_Project"
+git clone https://github.com/GRsoldier7/-Foundational-Add-on-Project.git "! Foundation_AddOn_Project"
 ```
 
 **Step 2:** Create a workspace file in your project root:
@@ -31,28 +32,25 @@ git clone https://github.com/GRsoldier7/Foundation_AddOn_Project.git "! Foundati
 
 **Step 3:** Open the workspace in VS Code and start a Claude Code session. Skills, permissions, and operating principles load automatically.
 
-**Step 4 (cross-platform):** Generate configs for Codex and Opencode:
+**Step 4 (cross-platform):** Generate configs for Codex, Gemini, and Opencode:
 ```bash
 bash "../! Foundation_AddOn_Project/scripts/init-project.sh" .
 ```
 
-This creates `AGENTS.md`, `opencode.json`, `.claude/settings.json`, and `.foundation-sync.json` in your project.
+This creates `AGENTS.md`, `GEMINI.md`, `opencode.json`, `.claude/settings.json`,
+`.ai-memory/project-profile.md`, and `.foundation-sync.json` in your project.
 
 ## What You Get
 
 ### Skills (60+)
-Modular instruction bundles that activate on demand. Nine always-on skills run silently on every response (anti-hallucination, security, context management). The rest activate by trigger phrase or `/slash-command`.
+Modular instruction bundles that activate on demand. The always-on layer handles anti-hallucination, security, context management, verification, and response efficiency. The routed skill library covers:
 
-| Category | Count | Examples |
-|----------|-------|---------|
-| Always-On Meta | 9 | anti-hallucination, secure-by-design, context-guardian |
-| Core | 10 | adaptive-skill-orchestrator, notebooklm, parallel-execution-strategist |
-| Engineering | 10 | code-review, testing-strategy, app-security-architect |
-| Superpowers | 5 | brainstorming, TDD, systematic-debugging, writing-plans |
-| Strategy | 9 | business-genius, go-to-market-engine, pricing-strategist |
-| Tech Stack | 25 | FastAPI, PostgreSQL, Next.js, Terraform, Docker, Prisma |
-| gstack | 34 | Full virtual engineering team (plan, review, QA, ship) |
-| Community | 5 | cloud-solution-architect, architecture-patterns, security-threat-model |
+- Core orchestration and meta-skills
+- Engineering and tech-stack implementation
+- Strategy, growth, and product execution
+- Faith, legal-financial, and Microsoft specialty domains
+- gstack virtual team workflows
+- Selected community skills under `.claude/skills/`
 
 See [docs/skills-reference.md](docs/skills-reference.md) for the full catalog with triggers and cross-platform availability.
 
@@ -81,12 +79,20 @@ Projects stay current as the Foundation AddOn evolves:
 
 See [docs/cross-platform-guide.md](docs/cross-platform-guide.md) for the full cross-tool parity system.
 
+### Upstream Sync
+Foundation is not a hand-maintained fork of every skill. Selected specialty skills are synced from the main skill repo:
+
+- **Canonical upstream:** `https://github.com/GRsoldier7/My_AI_Skills`
+- **Curated subset manifest:** [`config/upstream-skill-manifest.txt`](config/upstream-skill-manifest.txt)
+- **Sync command:** `bash scripts/sync-upstream-skills.sh /path/to/My_AI_Skills`
+- **Command mirror refresh:** `bash scripts/sync-claude-commands.sh`
+
 ## Documentation
 
 | Guide | What It Covers |
 |-------|---------------|
 | [Setup Guide](docs/setup-guide.md) | Prerequisites, workspace creation, MCP installation, verification |
-| [Cross-Platform Guide](docs/cross-platform-guide.md) | Achieving parity across Claude Code, Codex, and Opencode |
+| [Cross-Platform Guide](docs/cross-platform-guide.md) | Achieving parity across Claude Code, Codex, Gemini, and Opencode |
 | [Skills Reference](docs/skills-reference.md) | Full skill catalog with triggers and platform support |
 | [Workflows](docs/workflows.md) | Sprint, debug, review, and feature workflows with cross-platform prompts |
 
@@ -107,27 +113,43 @@ See [docs/workflows.md](docs/workflows.md) for Codex/Opencode equivalents of eac
 ```
 .
 ├── CLAUDE.md                    # Claude Code master instructions
+├── AGENTS.md                    # Codex baseline instructions
+├── GEMINI.md                    # Gemini baseline instructions
 ├── README.md                    # This file
+├── commands/                    # Curated 15 thin command loaders
+├── .ai-memory/                  # Project memory bootstrap
 ├── docs/                        # Comprehensive documentation
+├── config/                      # Upstream sync manifest and repo metadata
+├── install.sh                   # Convenience installer wrapper
+├── install-permissions.sh       # Claude permissions re-sync wrapper
 ├── scripts/
 │   ├── init-project.sh          # Cross-platform project scaffolder
-│   ├── apply-fan-fixes.sh       # Dell Inspiron 3030 fan control
-│   └── fix-fan-control.sh       # Aquacomputer Quadro fan curve
+│   ├── sync-upstream-skills.sh  # Sync curated upstream skill subset
+│   ├── sync-claude-commands.sh  # Regenerate .claude/commands from skills/
+│   ├── validate-foundation.py   # Repo integrity validator
+│   └── test-init-project.sh     # Init-project smoke tests
 ├── skills/
 │   ├── core/                    # Always-on + orchestration skills
 │   ├── engineering/             # Code review, testing, security, infra
-│   ├── gstack/                  # Virtual engineering team (34 skills)
+│   ├── faith/                   # Theology, lesson planning, life application
+│   ├── growth/                  # Marketing, content, brand, community, sales
+│   ├── gstack/                  # Virtual engineering team
+│   ├── legal-financial/         # Business tax strategy
+│   ├── microsoft/               # Power Platform and Microsoft 365 skills
+│   ├── product/                 # Product and domain-specific business systems
 │   ├── strategy/                # Business, market, pricing skills
 │   ├── superpowers/             # TDD, debugging, brainstorming, plans
-│   └── tech/                    # Framework-specific skills (25)
+│   └── tech/                    # Framework-specific skills
 ├── templates/                   # Cross-platform config templates
 ├── mcp-config/                  # Recommended MCP server configs
-└── vaultwarden/                 # Self-hosted credential management
+├── vaultwarden/                 # Self-hosted credential management
+└── contrib/local/aaron/         # Explicitly non-portable host operations
 ```
 
 ## Contributing
 
-1. **Add a skill:** Use `/skill-builder` or create `skills/<category>/<name>/SKILL.md`
-2. **Update permissions:** Edit `.claude/settings.json` (allow/deny/ask tiers)
-3. **Add an MCP server:** Add entry to `mcp-config/recommended-servers.json`
-4. **Generate community skills:** `npx ctx7 skills generate`
+1. **Sync shared specialty skills:** Update `My_AI_Skills`, then run `bash scripts/sync-upstream-skills.sh /path/to/My_AI_Skills`
+2. **Add Foundation-only skills:** Create `skills/<category>/<name>/SKILL.md` when the skill belongs in the portable addon itself
+3. **Refresh command mirrors:** Run `bash scripts/sync-claude-commands.sh`
+4. **Validate before commit:** Run `python3 scripts/validate-foundation.py` and `bash scripts/test-init-project.sh`
+5. **Add an MCP server:** Update `mcp-config/recommended-servers.json`

@@ -1,0 +1,24 @@
+# Foundation AddOn Cursor Rules
+
+## Scope
+
+Use this repo as a portable instruction/skill framework.
+
+## Coding Rules
+
+- Keep changes minimal and scoped.
+- Prefer updating templates/scripts over one-off generated files.
+- Mirror skill changes into `.claude/commands/` when required.
+- Keep markdown concise and structured.
+- Use ASCII unless existing file requires Unicode.
+
+## Safety
+
+- No secrets in code or outputs.
+- No destructive git or filesystem operations without explicit instruction.
+
+## Verification
+
+- `python3 scripts/validate-foundation.py`
+- `bash scripts/test-init-project.sh`
+- `shellcheck scripts/*.sh`

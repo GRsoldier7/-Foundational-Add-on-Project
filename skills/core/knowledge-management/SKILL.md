@@ -16,11 +16,11 @@ description: |
   information across their projects and systems.
 metadata:
   author: aaron-deyoung
-  version: "1.0"
+  version: "2.0"
   domain-category: core
   adjacent-skills: portable-ai-instructions, polychronos-team, skill-amplifier, session-optimizer
-  last-reviewed: "2026-03-21"
-  review-trigger: "User reports information retrieval failures, new tool adoption, system reorganization"
+  last-reviewed: "2026-04-17"
+  review-trigger: "Retrieval failures, memory drift, new platform instruction files or workflow changes"
   capability-assumptions:
     - "Works with any note system — Obsidian, Notion, plain markdown, Google Docs"
     - "File system access helpful for organizing local projects"
@@ -37,6 +37,28 @@ metadata:
 - Can chain from: any skill (capture knowledge generated during skill execution)
 - Can chain into: portable-ai-instructions (knowledge → CLAUDE.md), session-optimizer (knowledge persistence)
 - Orchestrator notes: recommend plain markdown as default format for maximum portability
+
+---
+
+## Project Memory Bootstrap (v2)
+
+Use `.ai-memory/project-profile.md` as the minimum durable memory anchor in every project.
+
+### Required fields
+- Mission and scope boundaries
+- Architecture decisions with rationale
+- Operational preferences (test/lint/release commands)
+- Active risks and mitigations
+
+### Update cadence
+- Update when a design decision changes.
+- Update before session handoff on multi-step work.
+- Prune stale risks monthly.
+
+### Hygiene rules
+- Keep entries short and durable.
+- No secrets, API keys, or raw incident payloads.
+- Link out to longer docs instead of duplicating full content.
 
 ---
 

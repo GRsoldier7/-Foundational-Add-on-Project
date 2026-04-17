@@ -5,7 +5,7 @@ description: >
   selects optimal skill combination, determines parallel vs sequential execution, dispatches,
   and synthesizes results. Supersedes static master-orchestrator routing.
 type: skill
-version: "2.1"
+version: "2.2"
 trigger: AUTO — every non-trivial request, before any other skill
 priority: HIGHEST
 allowed-tools:
@@ -146,6 +146,20 @@ ORCHESTRATOR
 ## Phase 4: Self-Optimization
 
 After orchestration: record user pushback (routing mismatch), skill rework (substitution candidate), parallel vs sequential accuracy, first-pass VERIFIED output (boost priority). Persist to knowledge-management.
+
+---
+
+## Phase 4.5: Cross-Platform Alignment Gate
+
+If a task changes shared behavior, ensure instruction surfaces remain aligned:
+
+1. `CLAUDE.md` (Claude-native guidance)
+2. `AGENTS.md` (Codex baseline)
+3. `GEMINI.md` (Gemini baseline)
+4. `templates/` outputs used by `init-project.sh`
+5. `commands/` curated thin loaders when routing entrypoints change
+
+Fail orchestration completeness if behavior changed in one surface but not its peers.
 
 ---
 

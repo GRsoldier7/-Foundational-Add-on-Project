@@ -72,9 +72,9 @@ If it responds with a structured brainstorming flow, the addon is working.
 
 ---
 
-## 3. Cross-Platform Setup (Codex / Opencode)
+## 3. Cross-Platform Setup (Codex / Gemini / Opencode)
 
-The Foundation AddOn is primarily built for Claude Code, but it can generate instruction files for Codex CLI and Opencode.
+The Foundation AddOn is primarily built for Claude Code, but it can generate instruction files for Codex CLI, Gemini CLI, and Opencode.
 
 See `docs/cross-platform-guide.md` for the full explanation of how each tool discovers instructions and the translation strategy.
 
@@ -83,17 +83,23 @@ See `docs/cross-platform-guide.md` for the full explanation of how each tool dis
 | File | Used By | Purpose |
 |------|---------|---------|
 | `AGENTS.md` | Codex CLI | Flattened skill instructions as prose |
+| `GEMINI.md` | Gemini CLI | Gemini-specific instruction baseline |
 | `opencode.json` | Opencode | Project-level config with instructions |
 | `.claude/settings.json` | Claude Code | Permission rules for the companion project |
+| `.ai-memory/project-profile.md` | All | Durable project memory bootstrap |
 | `.foundation-sync.json` | All | Tracks sync state between addon and project |
 
-Note: as of this writing, the init script (`scripts/init-project.sh`) is planned but not yet shipped. Check the `scripts/` directory for availability. When it exists, usage will be:
+Run the init script from your companion project root:
 
 ```bash
-bash "/path/to/Foundation_AddOn_Project/scripts/init-project.sh" /path/to/your-project
+bash "/path/to/Foundation_AddOn_Project/scripts/init-project.sh" .
 ```
 
-In the meantime, the workspace file approach (Section 2) gives you full access to all skills and permissions through Claude Code.
+For update syncs later:
+
+```bash
+bash "/path/to/Foundation_AddOn_Project/scripts/init-project.sh" --update .
+```
 
 ---
 

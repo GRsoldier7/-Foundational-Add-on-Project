@@ -16,11 +16,11 @@ description: |
   mentioning n8n — assess whether n8n is the right tool and recommend accordingly.
 metadata:
   author: aaron-deyoung
-  version: "1.0"
+  version: "2.0"
   domain-category: engineering
   adjacent-skills: ai-agentic-specialist, power-automate, cloud-migration-playbook, app-security-architect
-  last-reviewed: "2026-03-21"
-  review-trigger: "New n8n major version, new node types, user reports workflow pattern failure"
+  last-reviewed: "2026-04-17"
+  review-trigger: "New n8n major version, AI node updates, user reports workflow pattern failure"
   capability-assumptions:
     - "n8n self-hosted in Docker on home server (192.168.1.240)"
     - "HTTP Request node, Code node (JS), PostgreSQL node available"
@@ -37,6 +37,37 @@ metadata:
 - Can chain from: ai-agentic-specialist (agent design → automation layer)
 - Can chain into: app-security-architect (secure the webhook/credentials), cloud-migration-playbook (deploy)
 - Orchestrator notes: recommend sub-workflows for any design exceeding 15 nodes
+
+---
+
+## AI Agent Workflow Layer (v2.0)
+
+When a request includes AI agents, route workflows into this contract:
+
+1. **Supervisor workflow** handles intake, tool policy, and output QA.
+2. **Worker sub-workflows** run bounded tasks (research, classify, transform, notify).
+3. **Memory lane** persists concise state (`job_id`, `stage`, `decision`, `artifacts`).
+4. **Guardrails** enforce retries, deadlines, and escalation to a human path.
+5. **Idempotency key** is required for every agent-invoked side effect.
+
+### Agent Node Pattern (recommended)
+
+```
+Trigger -> Set(job_id, goal, policy) -> AI Agent (plan) ->
+Split tasks -> Execute Workflow(worker) -> Merge ->
+Code (quality gate + schema check) -> IF pass/fail ->
+  pass -> destination action
+  fail -> human-review queue + alert
+```
+
+### Memory Lifecycle for Agent Workflows
+
+- **Capture:** input payload + normalized intent.
+- **Working memory:** intermediate summaries per stage.
+- **Decision memory:** final structured decision + confidence tier.
+- **Archive:** persist compact lineage record for replay/debug.
+
+Prefer short deterministic memory objects over long transcript blobs.
 
 ---
 
@@ -240,7 +271,8 @@ If any check fails, revise before presenting.
 ---
 
 ## Read references/ for:
-- Extended pagination patterns for common APIs
-- Docker Compose template for n8n with PostgreSQL and Redis
-- n8n backup and migration procedures
-- Advanced sub-workflow communication patterns
+- [ai-agent-supervisor-template.md](references/ai-agent-supervisor-template.md)
+- [ai-agent-human-escalation-template.md](references/ai-agent-human-escalation-template.md)
+- [multi-agent-research-synthesis-template.md](references/multi-agent-research-synthesis-template.md)
+- [event-triage-remediation-template.md](references/event-triage-remediation-template.md)
+- [daily-ops-summary-template.md](references/daily-ops-summary-template.md)

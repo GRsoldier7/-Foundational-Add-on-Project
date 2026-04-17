@@ -1,0 +1,23 @@
+{
+  "$schema": "https://opencode.ai/config.schema.json",
+  "_generated_for": "Foundation AddOn repository baseline",
+  "theme": "catppuccin",
+  "provider": {
+    "anthropic": {
+      "model": "claude-sonnet-4-6"
+    }
+  },
+  "models": {
+    "default": {
+      "provider": "anthropic",
+      "model": "claude-sonnet-4-6"
+    }
+  },
+  "instructions": [
+    "Follow AGENTS.md at the repository root for baseline operating rules.",
+    "If Gemini-specific behavior is needed, consult GEMINI.md.",
+    "Run validation scripts before completion claims.",
+    "Never expose secrets or run destructive operations without explicit confirmation."
+  ],
+  "mcpServers": {}
+}

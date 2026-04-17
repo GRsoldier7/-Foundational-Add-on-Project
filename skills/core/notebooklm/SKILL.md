@@ -17,19 +17,58 @@ description: |
 compatibility: Requires notebooklm-py CLI installed; Google account authenticated; Python 3.10+
 metadata:
   author: aaron-deyoung
-  version: "2.1"
+  version: "3.0"
   domain-category: core
-  adjacent-skills: wrapup, knowledge-management, obsidian-automation-architect
-  last-reviewed: "2026-04-04"
-  review-trigger: "notebooklm-py version bump, Google NotebookLM UI changes that break auth, new artifact type added"
+  adjacent-skills: knowledge-management, data-storytelling, session-optimizer
+  last-reviewed: "2026-04-17"
+  review-trigger: "notebooklm-py version bump, auth flow changes, new artifact type or memory workflow updates"
 allowed-tools: Bash
 ---
 
 ## Composability Contract
 - Input expects: topic, URLs, files, or research query to process
 - Output produces: notebooks, sources, generated artifacts (audio, quiz, slides, etc.)
-- Hands off to: wrapup (session summaries), knowledge-management (vault organization)
+- Hands off to: knowledge-management (vault organization), data-storytelling (artifact framing)
 - Receives from: any skill needing to transform content into audio/visual/study material
+
+---
+
+## CLI Operator Mode
+
+Operate NotebookLM as a deterministic CLI workflow, not an ad-hoc chat tool:
+
+1. **Preflight:** `auth check`, venv activation, context selection.
+2. **Ingest:** add sources with stable titles + wait for READY.
+3. **Generate:** one artifact at a time with explicit instructions.
+4. **Verify:** wait for completion, download, size-check output.
+5. **Persist memory:** append concise outcomes to project memory.
+
+Operator mode requires command-by-command state tracking: notebook id, source ids, artifact ids,
+and output paths must be captured after every step.
+
+---
+
+## NotebookLM Memory Lifecycle
+
+Use this lifecycle for all non-trivial NotebookLM runs:
+
+### 1. Capture
+- Topic, objective, audience, and success criteria.
+- Source list (URLs/files) and trust level notes.
+
+### 2. Distill
+- Artifact outputs (podcast, slides, quiz) with one-line usefulness summary.
+- Key claims that need citation or follow-up verification.
+
+### 3. Store
+- Save a compact session summary in `.ai-memory/project-profile.md` or a linked run log.
+- Keep only durable facts and decisions, not raw transcript dumps.
+
+### 4. Rehydrate
+- Before next run, read prior memory and reuse notebook where continuity helps.
+- If context diverged, create a new notebook and link the previous one.
+
+Memory lifecycle prevents repeat ingestion and makes recurring workflows reliable.
 
 ---
 
@@ -183,6 +222,8 @@ notebooklm generate slide-deck --format presenter
 - [ ] All sources confirmed READY before generating
 - [ ] Artifact confirmed COMPLETED before downloading
 - [ ] Download file exists and is non-zero bytes
+- [ ] Operator state tracked (`notebook_id`, `source_ids`, `artifact_ids`, output paths)
+- [ ] Memory lifecycle completed (capture -> distill -> store -> rehydrate)
 - [ ] Auth flow was fully automated — user only signed in to Google
 
 ---

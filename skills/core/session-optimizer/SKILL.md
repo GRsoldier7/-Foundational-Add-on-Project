@@ -11,11 +11,11 @@ description: |
   Also trigger when work will clearly exceed one context window or user seems frustrated.
 metadata:
   author: aaron-deyoung
-  version: "1.1"
+  version: "1.2"
   domain-category: core
   adjacent-skills: parallel-execution-strategist, anti-hallucination, context-guardian, efficiency-engine
-  last-reviewed: "2026-04-10"
-  review-trigger: "New Claude Code features, context window changes"
+  last-reviewed: "2026-04-17"
+  review-trigger: "Context window changes, memory workflow updates, new handoff patterns"
   capability-assumptions:
     - "Claude Code CLI with standard tool suite"
     - "Settings, CLAUDE.md, and hook system"
@@ -70,6 +70,16 @@ At 60%+, context-guardian takes over with AMBER/RED protocols. This skill defers
 - Edit over Write (sends only diff)
 - Batch related changes to same file
 - Reference by path+line, don't echo large content
+
+### `.ai-memory` Checkpoints
+
+At 50%+ context, checkpoint durable state to `.ai-memory/project-profile.md`:
+- changed assumptions
+- architecture decisions
+- unresolved risks
+- next verification command
+
+Do not checkpoint transient logs or large tool outputs.
 
 ---
 

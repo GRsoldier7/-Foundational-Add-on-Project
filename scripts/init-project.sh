@@ -3,15 +3,15 @@
 # init-project.sh — Scaffold cross-platform AI configs for a new project
 # =============================================================================
 #
-# Generates AGENTS.md, opencode.json, .claude/settings.json, and a
-# .code-workspace file from Foundation AddOn templates. Detects tech stack
-# and injects stack-specific permissions.
+# Generates AGENTS.md, GEMINI.md, opencode.json, .claude/settings.json,
+# .ai-memory/project-profile.md, and a .code-workspace file from Foundation
+# AddOn templates. Detects tech stack and injects stack-specific permissions.
 #
 # Usage:
 #   bash init-project.sh /path/to/project                     # first-time setup
 #   bash init-project.sh --update /path/to/project             # re-sync existing
 #   bash init-project.sh --dry-run /path/to/project            # preview changes
-#   bash init-project.sh --platform claude,codex /path/to/project  # specific platforms
+#   bash init-project.sh --platform claude,codex,gemini /path/to/project  # specific platforms
 #   bash init-project.sh --no-mcp /path/to/project             # skip MCP prompt
 #
 # =============================================================================
@@ -42,7 +42,7 @@ TEMPLATES_DIR="$FOUNDATION_ROOT/templates"
 DRY_RUN=false
 UPDATE_MODE=false
 SKIP_MCP=false
-PLATFORMS="claude,codex,opencode"
+PLATFORMS="claude,codex,gemini,opencode"
 TARGET=""
 
 while [[ $# -gt 0 ]]; do
@@ -57,7 +57,7 @@ while [[ $# -gt 0 ]]; do
             echo "Options:"
             echo "  --update       Re-sync existing project (preserves custom sections)"
             echo "  --dry-run      Show what would change without writing files"
-            echo "  --platform X   Comma-separated: claude,codex,opencode (default: all)"
+            echo "  --platform X   Comma-separated: claude,codex,gemini,opencode (default: all)"
             echo "  --no-mcp       Skip MCP server setup prompt"
             echo "  --help         Show this help"
             exit 0
@@ -66,6 +66,53 @@ while [[ $# -gt 0 ]]; do
         *)           TARGET="$1"; shift ;;
     esac
 done
+
+normalize_platforms() {
+    local raw="$1"
+    local normalized=""
+    local IFS=','
+    local entries=()
+    read -r -a entries <<< "$raw"
+
+    if [[ ${#entries[@]} -eq 0 ]]; then
+        err "No platforms provided. Allowed values: claude,codex,gemini,opencode"
+        exit 1
+    fi
+
+    for entry in "${entries[@]}"; do
+        local platform
+        platform="$(echo "$entry" | xargs)"
+
+        case "$platform" in
+            claude|codex|gemini|opencode) ;;
+            "")
+                err "Empty platform entry in --platform '$raw'"
+                exit 1
+                ;;
+            *)
+                err "Unknown platform '$platform'. Allowed values: claude,codex,gemini,opencode"
+                exit 1
+                ;;
+        esac
+
+        if [[ ",$normalized," != *",$platform,"* ]]; then
+            if [[ -n "$normalized" ]]; then
+                normalized="$normalized,$platform"
+            else
+                normalized="$platform"
+            fi
+        fi
+    done
+
+    if [[ -z "$normalized" ]]; then
+        err "No valid platforms provided. Allowed values: claude,codex,gemini,opencode"
+        exit 1
+    fi
+
+    PLATFORMS="$normalized"
+}
+
+normalize_platforms "$PLATFORMS"
 
 if [[ -z "$TARGET" ]]; then
     err "No target project path provided."
@@ -205,7 +252,7 @@ write_file() {
     fi
 
     mkdir -p "$(dirname "$filepath")"
-    echo "$content" > "$filepath"
+    printf '%s\n' "$content" > "$filepath"
     if [[ -f "$filepath" ]]; then
         ok "Written: $filepath ($desc)"
     fi
@@ -216,6 +263,16 @@ write_file() {
 # ---------------------------------------------------------------------------
 file_checksum() {
     sha256sum "$1" 2>/dev/null | cut -d' ' -f1 || echo "none"
+}
+
+json_escape() {
+    local raw="$1"
+    raw="${raw//\\/\\\\}"
+    raw="${raw//\"/\\\"}"
+    raw="${raw//$'\n'/\\n}"
+    raw="${raw//$'\r'/\\r}"
+    raw="${raw//$'\t'/\\t}"
+    printf '%s' "$raw"
 }
 
 # ---------------------------------------------------------------------------
@@ -242,6 +299,27 @@ if echo "$PLATFORMS" | grep -qE "codex|opencode"; then
     fi
 
     write_file "$TARGET/AGENTS.md" "$AGENTS_CONTENT" "Codex/Opencode instructions"
+fi
+
+# ---------------------------------------------------------------------------
+# Generate: GEMINI.md
+# ---------------------------------------------------------------------------
+if echo "$PLATFORMS" | grep -q "gemini"; then
+    section "Generating GEMINI.md"
+
+    GEMINI_CONTENT=$(cat "$TEMPLATES_DIR/GEMINI.md.tmpl")
+    GEMINI_CONTENT="${GEMINI_CONTENT//\{\{PROJECT_NAME\}\}/$PROJECT_NAME}"
+    GEMINI_CONTENT="${GEMINI_CONTENT//\{\{TECH_STACK\}\}/${DETECTED_STACK:-generic}}"
+    GEMINI_CONTENT="${GEMINI_CONTENT//\{\{CONVENTIONS\}\}/See project-specific conventions.}"
+    GEMINI_CONTENT="${GEMINI_CONTENT//\{\{FOUNDATION_PATH\}\}/$FOUNDATION_ROOT}"
+    GEMINI_CONTENT="${GEMINI_CONTENT//\{\{SYNC_TIMESTAMP\}\}/$SYNC_TIMESTAMP}"
+    GEMINI_CONTENT="${GEMINI_CONTENT//\{\{FOUNDATION_HASH\}\}/$FOUNDATION_HASH}"
+
+    if $UPDATE_MODE; then
+        GEMINI_CONTENT=$(preserve_custom_sections "$TARGET/GEMINI.md" "$GEMINI_CONTENT")
+    fi
+
+    write_file "$TARGET/GEMINI.md" "$GEMINI_CONTENT" "Gemini CLI instructions"
 fi
 
 # ---------------------------------------------------------------------------
@@ -283,6 +361,28 @@ if echo "$PLATFORMS" | grep -q "claude"; then
 fi
 
 # ---------------------------------------------------------------------------
+# Generate: .ai-memory/project-profile.md
+# ---------------------------------------------------------------------------
+section "Generating .ai-memory bootstrap"
+
+PROFILE_CONTENT=$(cat "$TEMPLATES_DIR/ai-memory/project-profile.md.tmpl")
+PROFILE_CONTENT="${PROFILE_CONTENT//\{\{PROJECT_NAME\}\}/$PROJECT_NAME}"
+PROFILE_CONTENT="${PROFILE_CONTENT//\{\{TECH_STACK\}\}/${DETECTED_STACK:-generic}}"
+PROFILE_CONTENT="${PROFILE_CONTENT//\{\{FOUNDATION_PATH\}\}/$FOUNDATION_ROOT}"
+PROFILE_CONTENT="${PROFILE_CONTENT//\{\{SYNC_TIMESTAMP\}\}/$SYNC_TIMESTAMP}"
+PROFILE_CONTENT="${PROFILE_CONTENT//\{\{FOUNDATION_HASH\}\}/$FOUNDATION_HASH}"
+
+if $UPDATE_MODE; then
+    PROFILE_CONTENT=$(preserve_custom_sections "$TARGET/.ai-memory/project-profile.md" "$PROFILE_CONTENT")
+fi
+
+if [[ ! -f "$TARGET/.ai-memory/project-profile.md" ]] || $UPDATE_MODE; then
+    write_file "$TARGET/.ai-memory/project-profile.md" "$PROFILE_CONTENT" "AI memory bootstrap profile"
+else
+    ok "Skipping .ai-memory/project-profile.md (already exists, use --update to overwrite)"
+fi
+
+# ---------------------------------------------------------------------------
 # Generate: opencode.json
 # ---------------------------------------------------------------------------
 if echo "$PLATFORMS" | grep -q "opencode"; then
@@ -303,9 +403,9 @@ if echo "$PLATFORMS" | grep -q "claude"; then
     section "Generating workspace file"
 
     WS_CONTENT=$(cat "$TEMPLATES_DIR/workspace.code-workspace.tmpl")
-    WS_CONTENT="${WS_CONTENT//\{\{PROJECT_NAME\}\}/$PROJECT_NAME}"
+    WS_CONTENT="${WS_CONTENT//\{\{PROJECT_NAME\}\}/$(json_escape "$PROJECT_NAME")}"
     WS_CONTENT="${WS_CONTENT//\{\{PROJECT_PATH\}\}/.}"
-    WS_CONTENT="${WS_CONTENT//\{\{FOUNDATION_PATH\}\}/$FOUNDATION_ROOT}"
+    WS_CONTENT="${WS_CONTENT//\{\{FOUNDATION_PATH\}\}/$(json_escape "$FOUNDATION_ROOT")}"
 
     WS_FILE="$TARGET/${PROJECT_NAME}.code-workspace"
     if [[ ! -f "$WS_FILE" ]]; then
@@ -321,7 +421,7 @@ fi
 section "Writing sync manifest"
 
 CHECKSUMS="{"
-for f in AGENTS.md opencode.json .claude/settings.json; do
+for f in AGENTS.md GEMINI.md opencode.json .claude/settings.json .ai-memory/project-profile.md; do
     if [[ -f "$TARGET/$f" ]]; then
         cs=$(file_checksum "$TARGET/$f")
         CHECKSUMS="$CHECKSUMS\"$f\":\"$cs\","
@@ -332,14 +432,14 @@ CHECKSUMS="${CHECKSUMS%,}}"
 SYNC_MANIFEST=$(cat <<SYNCEOF
 {
   "foundation_addon": {
-    "path": "$FOUNDATION_ROOT",
-    "commit": "$FOUNDATION_HASH",
-    "last_sync": "$SYNC_TIMESTAMP"
+    "path": "$(json_escape "$FOUNDATION_ROOT")",
+    "commit": "$(json_escape "$FOUNDATION_HASH")",
+    "last_sync": "$(json_escape "$SYNC_TIMESTAMP")"
   },
   "project": {
-    "name": "$PROJECT_NAME",
-    "tech_stack": "${DETECTED_STACK:-generic}",
-    "platforms": "$PLATFORMS"
+    "name": "$(json_escape "$PROJECT_NAME")",
+    "tech_stack": "$(json_escape "${DETECTED_STACK:-generic}")",
+    "platforms": "$(json_escape "$PLATFORMS")"
   },
   "generated_files": $CHECKSUMS,
   "custom_sections_preserved": true
@@ -375,7 +475,7 @@ if ! $SKIP_MCP && ! $DRY_RUN && [[ ! -f "$TARGET/.mcp.json" ]]; then
     },
     "playwright": {
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-server-playwright"]
+      "args": ["-y", "@playwright/mcp@latest"]
     },
     "fetch": {
       "command": "uvx",
@@ -408,14 +508,15 @@ else
     ok "Project initialized for: $PLATFORMS"
     echo ""
     echo "  Generated files:"
-    for f in AGENTS.md opencode.json .claude/settings.json .foundation-sync.json .mcp.json "${PROJECT_NAME}.code-workspace"; do
+    for f in AGENTS.md GEMINI.md opencode.json .claude/settings.json .ai-memory/project-profile.md .foundation-sync.json .mcp.json "${PROJECT_NAME}.code-workspace"; do
         [[ -f "$TARGET/$f" ]] && echo "    $TARGET/$f"
     done
     echo ""
     echo "  Next steps:"
     echo "    1. Open ${PROJECT_NAME}.code-workspace in VS Code"
-    echo "    2. Start a Claude Code session"
-    echo "    3. Try: /health or /brainstorming"
+    echo "    2. Review .ai-memory/project-profile.md and fill custom sections"
+    echo "    3. Start a Claude Code session"
+    echo "    4. Try: /health or /brainstorming"
     echo ""
     echo "  To update later:"
     echo "    bash $0 --update $TARGET"

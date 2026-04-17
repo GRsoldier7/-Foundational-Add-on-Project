@@ -1,20 +1,20 @@
 # Cross-Platform AI Tool Parity Guide
 
-How to make one project's AI instructions work consistently across Claude Code, Codex CLI (OpenAI), and Opencode -- without maintaining three separate config systems from scratch.
+How to make one project's AI instructions work consistently across Claude Code, Codex CLI (OpenAI), Gemini CLI, and Opencode -- without maintaining separate config systems from scratch.
 
 ---
 
 ## 1. The Cross-Platform Problem
 
-Every major AI coding tool invented its own instruction format. Claude Code reads `CLAUDE.md`. Codex CLI reads `AGENTS.md`. Opencode reads `opencode.json`. None of them natively understands the others.
+Every major AI coding tool invented its own instruction format. Claude Code reads `CLAUDE.md`. Codex CLI reads `AGENTS.md`. Gemini CLI reads `GEMINI.md`. Opencode reads `opencode.json`. None of them natively understands the others.
 
 This creates three concrete problems:
 
-**Skill lock-in.** The Foundation AddOn ships 60+ skills, but skills are a Claude Code concept. There is no equivalent runtime in Codex or Opencode. A skill like `/brainstorming` that enforces "design before building" has to be translated into plain-text instructions for other tools.
+**Skill lock-in.** The Foundation AddOn ships 60+ skills, but skills are a Claude Code concept. There is no equivalent runtime in Codex, Gemini, or Opencode. A skill like `/brainstorming` that enforces "design before building" has to be translated into plain-text instructions for other tools.
 
-**Permission fragmentation.** Claude Code has a three-tier permission model (allow/deny/ask). Codex runs in a sandbox with its own defaults. Opencode delegates to the underlying provider. There is no universal permission spec.
+**Permission fragmentation.** Claude Code has a three-tier permission model (allow/deny/ask). Codex runs in a sandbox with its own defaults. Gemini and Opencode delegate to provider/tool defaults. There is no universal permission spec.
 
-**Context discovery mismatch.** Claude Code walks the directory tree merging every `CLAUDE.md` it finds. Codex walks the tree merging every `AGENTS.md`. Opencode merges JSON configs from global to project scope. Same idea, different files, different merge semantics.
+**Context discovery mismatch.** Claude Code walks the directory tree merging every `CLAUDE.md` it finds. Codex walks the tree merging every `AGENTS.md`. Gemini reads `GEMINI.md`. Opencode merges JSON configs from global to project scope. Same idea, different files, different merge semantics.
 
 The result: teams using multiple tools end up with instructions that drift apart, or worse, exist only for one tool while others run unguided.
 
@@ -28,6 +28,7 @@ This guide solves that by establishing a translation layer and a maintenance pat
 |--------|---------|----------|--------|-----|-------------|---------|-------------------|----------------|
 | `CLAUDE.md` | Claude Code | Any directory (walks tree) | Native (Skill tool, /slash-commands) | Native (.mcp.json) | allow/deny/ask in settings.json | No built-in sandbox | ~20K tokens before context pressure | Yes -- merges every CLAUDE.md found in tree |
 | `AGENTS.md` | Codex CLI, growing ecosystem | Any directory (walks tree) | No -- inline instructions only | No -- describe tools in prose | No -- advisory text only | Codex runs in network-disabled sandbox by default | ~15K tokens recommended | Yes -- merges every AGENTS.md found in tree |
+| `GEMINI.md` | Gemini CLI | Project root | No -- inline instructions only | No -- tool-dependent | No -- advisory text only | Provider-dependent | ~15K tokens recommended | Single file |
 | `opencode.json` | Opencode | Project root, `~/.config/opencode/` | No -- inline instructions only | No -- provider-dependent | No -- provider-dependent | Provider-dependent | JSON; instructions field is a string | Yes -- merges global, custom, project configs |
 | `.cursorrules` | Cursor | Project root | No | No | No | No | ~6K tokens practical | Single file, no merge |
 | `.github/copilot-instructions.md` | GitHub Copilot | `.github/` directory | No | No | No | No | ~8K tokens practical | Single file, no merge |

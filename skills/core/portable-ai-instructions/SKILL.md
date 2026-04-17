@@ -4,11 +4,11 @@ description: |
   Generate project instruction files (CLAUDE.md, AGENTS.md, GEMINI.md, .cursorrules, copilot-instructions.md) tailored to any AI coding tool. This meta-skill understands the conventions, capabilities, and quirks of each tool and produces optimized instruction files that maximize the AI's effectiveness on your projects. Use this skill whenever the user mentions creating project instructions, setting up AI tool configs, writing CLAUDE.md, AGENTS.md, GEMINI.md, .cursorrules, copilot instructions, or wants to "set up a new project" for AI-assisted development. Also trigger when the user asks about making AI tools work better on their codebase, porting instructions between tools, or wants a consistent AI experience across multiple tools.
 metadata:
   author: aaron-deyoung
-  version: "1.0"
+  version: "2.0"
   domain-category: core
   adjacent-skills: prompt-amplifier, polychronos-team, skill-builder
-  last-reviewed: "2026-03-15"
-  review-trigger: "New AI tool releases, Claude Code instruction format changes, AGENTS.md spec updates"
+  last-reviewed: "2026-04-17"
+  review-trigger: "New AI tool releases, AGENTS/GEMINI spec changes, cross-platform config drift"
   capability-assumptions:
     - "No external tools required beyond standard Claude Code tools"
   fallback-patterns:
@@ -19,6 +19,17 @@ metadata:
 # Portable AI Instructions Generator
 
 You are helping create project instruction files that make AI coding tools maximally effective. Different tools use different file formats, but the underlying content is largely the same: project context, coding conventions, architecture decisions, and workflow preferences. This skill helps you write once and deploy everywhere.
+
+## v2 Alignment Guardrails
+
+When updating instruction files, treat these as a synchronized set:
+- `CLAUDE.md`
+- `AGENTS.md`
+- `GEMINI.md`
+- `templates/*.tmpl` used for downstream generation
+- `.ai-memory/project-profile.md` bootstrap template (if project memory is part of workflow)
+
+If one file changes behavior but peers do not, mark the task incomplete until aligned.
 
 ## Why this matters
 
