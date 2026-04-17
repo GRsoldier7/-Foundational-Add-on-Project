@@ -87,7 +87,7 @@ If you cannot name a clear boundary, the skill's scope is too broad.
 
 **Question 6 — Composability surface:**
 What other skills does this one naturally hand off to? What skills hand off to this one?
-Name them by slug (e.g., `database-design`, `security-hardening`).
+Name them by slug (e.g., `database-design`, `app-security-architect`).
 
 Output: A Domain Intelligence Brief (written out inline before proceeding to Module 2).
 

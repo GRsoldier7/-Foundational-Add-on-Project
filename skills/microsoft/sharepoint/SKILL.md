@@ -1,0 +1,523 @@
+---
+name: sharepoint
+description: >
+  Genius-level SharePoint expertise covering SharePoint Online, site architecture, lists, libraries,
+  document management, SPFx, search, permissions, governance, migration, and integration patterns.
+  Use this skill whenever the user mentions SharePoint, SP Online, SPO, SharePoint lists, document libraries,
+  site collections, hub sites, SPFx (SharePoint Framework), content types, site columns, managed metadata,
+  term store, SharePoint search, KQL, permissions, sharing, site templates, PnP PowerShell, CSOM,
+  REST API, Graph API for SharePoint, migration, or any content/document management in the Microsoft 365
+  ecosystem. Also trigger for questions about information architecture, retention policies, sensitivity
+  labels, compliance, Teams-connected sites, or SharePoint Embedded. Even casual mentions of
+  "document management", "intranet", or "team site" in a Microsoft context should trigger this skill.
+metadata:
+  author: aaron-deyoung
+  version: "1.0"
+  domain-category: microsoft
+  adjacent-skills: power-automate, m365-integration, power-apps
+  last-reviewed: "2026-03-15"
+  review-trigger: "SharePoint major feature release, Graph API for SharePoint breaking change, SPFx version update"
+  capability-assumptions:
+    - "Microsoft 365 tenant with appropriate licenses"
+    - "Power Platform environment access"
+  fallback-patterns:
+    - "If no tenant access: provide configuration guidance as text"
+    - "If license tier unclear: ask before generating premium-tier guidance"
+  degradation-mode: "graceful"
+---
+
+# SharePoint — Savant-Level Skill
+
+## Philosophy
+
+SharePoint mastery = **information architecture first** (before building anything), **hub sites for governance** (not site collection hierarchy), **metadata over folders** (always), and **Graph API as the future** (PnP PowerShell for admin, Graph for apps).
+
+---
+
+## 1. Information Architecture
+
+### Site Topology (Modern)
+```
+Hub Site (Intranet)
+  ├─ Hub Site (HR)
+  │   ├─ Communication Site: HR Policies
+  │   ├─ Communication Site: Benefits Portal
+  │   └─ Team Site: HR Operations (Teams-connected)
+  ├─ Hub Site (Engineering)
+  │   ├─ Team Site: Project Alpha (Teams-connected)
+  │   ├─ Team Site: Project Beta (Teams-connected)
+  │   └─ Communication Site: Engineering Standards
+  └─ Communication Site: Company News
+```
+
+### Site Type Decision
+| Type | Purpose | Teams Integration |
+|---|---|---|
+| **Communication Site** | Broad audience, publishing, news | No (not recommended) |
+| **Team Site** | Collaboration, project work | Yes (auto-provisions) |
+| **Hub Site** | Navigation, search scope, governance roll-up | Associates other sites |
+
+### Metadata vs Folders
+```
+❌ Folder structure:
+  Documents/
+    2024/
+      Q1/
+        Finance/
+          report.docx
+
+✅ Metadata approach:
+  Documents/report.docx
+    Year: 2024
+    Quarter: Q1
+    Department: Finance
+    DocType: Report
+
+Benefits:
+  - Views: Filter by any combination (folders can't do this)
+  - Search: Metadata is searchable and refinable
+  - Reuse: Same doc can "belong" to multiple categories
+  - Automation: Power Automate can filter/route by metadata
+  - Retention: Policies apply by metadata, not location
+```
+
+### Content Types & Site Columns
+```
+Site Column: "Department" (Managed Metadata, Term Store: "Departments")
+Site Column: "DocType" (Choice: Policy, Procedure, Report, Template)
+Site Column: "ReviewDate" (Date)
+
+Content Type: "Controlled Document"
+  Inherits from: Document
+  Columns: Department, DocType, ReviewDate, ApprovalStatus
+  Workflow: Requires approval before publish
+  Retention: 7 years after ReviewDate
+
+Content Type: "Project Deliverable"
+  Inherits from: Document
+  Columns: ProjectID, Phase, DeliverableType
+```
+
+---
+
+## 2. Lists — Advanced Patterns
+
+### List Design Best Practices
+- **5,000 item threshold**: Not a limit — it's an index threshold. Add indexes on filtered/sorted columns.
+- **Index strategy**: Add indexes on columns used in views, filters, sort, group-by
+- **Calculated columns**: Compute at write-time (good for search/filter); can't reference other lists
+- **JSON column formatting**: Rich display without SPFx
+
+### Column Formatting (JSON)
+```json
+// Status badge with color
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/column-formatting.schema.json",
+  "elmType": "div",
+  "style": {
+    "padding": "4px 8px",
+    "border-radius": "16px",
+    "background-color": "=if(@currentField == 'Active', '#dff6dd', if(@currentField == 'Pending', '#fff4ce', '#fde7e9'))",
+    "color": "=if(@currentField == 'Active', '#107c10', if(@currentField == 'Pending', '#7f6000', '#a80000'))"
+  },
+  "txtContent": "@currentField"
+}
+
+// Progress bar
+{
+  "elmType": "div",
+  "children": [
+    {
+      "elmType": "div",
+      "style": {
+        "width": "=toString(@currentField) + '%'",
+        "background-color": "=if(@currentField >= 75, '#107c10', if(@currentField >= 50, '#ffaa44', '#d13438'))",
+        "height": "8px",
+        "border-radius": "4px"
+      }
+    }
+  ]
+}
+
+// Clickable link to person's profile
+{
+  "elmType": "a",
+  "txtContent": "[$AssignedTo.title]",
+  "attributes": {
+    "href": "='/_layouts/15/me.aspx?u=' + [$AssignedTo.email]",
+    "target": "_blank"
+  }
+}
+```
+
+### View Formatting
+```json
+// Tile/card layout for list items
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/sp/v2/tile-formatting.schema.json",
+  "height": 200,
+  "width": 300,
+  "hideSelection": false,
+  "formatter": {
+    "elmType": "div",
+    "style": {
+      "display": "flex",
+      "flex-direction": "column",
+      "padding": "16px",
+      "border-radius": "8px",
+      "box-shadow": "0 2px 4px rgba(0,0,0,0.1)"
+    },
+    "children": [
+      {"elmType": "div", "txtContent": "[$Title]", "style": {"font-weight": "600", "font-size": "16px"}},
+      {"elmType": "div", "txtContent": "[$Status]", "style": {"margin-top": "8px"}},
+      {"elmType": "div", "txtContent": "=toLocaleDateString([$DueDate])", "style": {"margin-top": "auto", "color": "#666"}}
+    ]
+  }
+}
+```
+
+---
+
+## 3. Document Management
+
+### Document Sets
+- Group related documents as a single unit with shared metadata
+- Enable on library → Content Types → Add "Document Set"
+- Use for: RFP packages, contract bundles, project deliverables
+
+### Version History Strategy
+| Scenario | Major Versions | Minor (Draft) Versions | Content Approval |
+|---|---|---|---|
+| Team collaboration | Unlimited (trim to 50) | Off | No |
+| Controlled documents | Unlimited | 10 drafts | Yes |
+| Records management | Unlimited (no delete) | Off | Yes |
+
+### Retention & Compliance
+```
+Retention Policy (Microsoft Purview):
+  - Apply to: SharePoint sites / specific libraries
+  - Retain for: 7 years after last modified
+  - Action after: Delete automatically / Review
+  - Scope: By sensitivity label, content type, or KQL query
+
+Retention Label:
+  - "Financial Record" → Retain 7 years, then dispose
+  - "Legal Hold" → Retain indefinitely
+  - Auto-apply: KQL query matching "contract" AND "signed"
+
+Record Declaration:
+  - Mark as record → Immutable (no edit/delete)
+  - Regulatory record → Even admins can't delete
+```
+
+---
+
+## 4. Search (KQL)
+
+### KQL Query Patterns
+```
+// Basic
+contentclass:STS_ListItem_DocumentLibrary Title:budget
+
+// Managed properties
+RefinableString00:"Project Alpha" RefinableDate00>2024-01-01
+
+// File types
+FileExtension:pdf OR FileExtension:docx
+
+// Path scoping
+Path:"https://contoso.sharepoint.com/sites/HR"
+
+// People
+Author:"Jane Smith" OR ModifiedBy:"Jane Smith"
+
+// Date ranges
+LastModifiedTime>2024-01-01 AND LastModifiedTime<2024-06-30
+
+// Wildcards (prefix only)
+Title:budg*
+
+// Exclusions
+-ContentType:"Folder" -FileExtension:aspx
+
+// Complex
+(Title:quarterly OR Title:annual) AND FileExtension:pptx AND Path:"*/Finance/*"
+
+// Promoted results / query rules
+// Admin → Search → Manage query rules → Add promoted results for key terms
+```
+
+### Search Schema
+- **Crawled properties**: Auto-discovered (ows_fieldname)
+- **Managed properties**: Mapped from crawled, queryable/refinable/sortable
+- **Custom mapping**: Site Column → Crawled property → Managed property (RefinableStringXX)
+
+---
+
+## 5. Permissions Architecture
+
+### Permission Inheritance Model
+```
+Tenant
+  └─ Site Collection (unique permissions)
+      └─ Site (inherits or unique)
+          └─ Library (inherits or unique)
+              └─ Folder (inherits or unique)    ← AVOID
+                  └─ Item (inherits or unique)  ← AVOID
+
+Golden rule: Break inheritance at SITE level, almost never below.
+```
+
+### Permission Levels
+| Level | Access | Use Case |
+|---|---|---|
+| Full Control | Everything | Site owners |
+| Design | Add/customize pages | Intranet editors |
+| Edit | Add/edit/delete items | Team members |
+| Contribute | Add/edit items (no delete lists) | External contributors |
+| Read | View only | Broad audience |
+| View Only | View in browser (no download) | Restricted content |
+
+### Sharing Best Practices
+- Use **M365 Groups** (not individual permissions)
+- **Sensitivity labels** control external sharing at site level
+- **Site-level sharing settings** override item-level
+- Audit sharing with: `Get-SPOSite | Select SharingCapability`
+
+---
+
+## 6. PnP PowerShell & Automation
+
+### Common Admin Tasks
+```powershell
+# Connect
+Connect-PnPOnline -Url "https://contoso.sharepoint.com/sites/HR" -Interactive
+
+# Bulk create sites from CSV
+Import-Csv sites.csv | ForEach-Object {
+    New-PnPSite -Type CommunicationSite `
+        -Title $_.Title -Url $_.Url -Description $_.Description
+    Add-PnPHubSiteAssociation -Site $_.Url -HubSite $_.HubUrl
+}
+
+# Apply site template (PnP provisioning)
+Invoke-PnPSiteTemplate -Path "template.xml"
+
+# Bulk metadata update
+Get-PnPListItem -List "Documents" -PageSize 500 | ForEach-Object {
+    Set-PnPListItem -List "Documents" -Identity $_.Id -Values @{
+        "Department" = "Engineering"
+    }
+}
+
+# Export site structure
+Get-PnPSiteTemplate -Out "template.xml" -IncludeAllPages `
+    -Handlers Lists,Fields,ContentTypes,Navigation
+
+# Permissions report
+Get-PnPList | ForEach-Object {
+    Get-PnPListItem -List $_.Title -PageSize 100 | Where-Object {
+        $_.HasUniqueRoleAssignments
+    } | Select-Object Id, @{N="Title";E={$_.FieldValues.Title}}
+}
+```
+
+### Graph API for SharePoint
+```
+// List items
+GET /sites/{site-id}/lists/{list-id}/items?$expand=fields
+
+// Create item
+POST /sites/{site-id}/lists/{list-id}/items
+{
+  "fields": {
+    "Title": "New Item",
+    "Department": "Engineering"
+  }
+}
+
+// Upload file
+PUT /sites/{site-id}/drive/items/{parent-id}:/{filename}:/content
+Content-Type: application/octet-stream
+<file binary>
+
+// Search
+POST /search/query
+{
+  "requests": [{
+    "entityTypes": ["driveItem"],
+    "query": {"queryString": "budget 2024"},
+    "from": 0, "size": 25
+  }]
+}
+```
+
+---
+
+## 7. SPFx (SharePoint Framework)
+
+### When to Use SPFx
+- Custom web parts beyond OOTB capabilities
+- Extensions (header/footer, field customizers, command sets)
+- Integration with external APIs requiring client-side code
+- Custom Teams tabs backed by SharePoint
+
+### Project Setup
+```bash
+# Generator
+npm install -g @microsoft/generator-sharepoint
+yo @microsoft/sharepoint
+
+# Key choices:
+#   Component: WebPart | Extension
+#   Framework: React | No framework
+#   Permissions: Isolated (service-scoped) | Standard
+```
+
+### Architecture Patterns
+```
+// Service layer for data access
+export class DataService {
+  constructor(private context: WebPartContext) {}
+
+  async getItems(): Promise<IItem[]> {
+    const client = await this.context.msGraphClientFactory.getClient('3');
+    const response = await client.api('/sites/{id}/lists/{id}/items')
+      .expand('fields').get();
+    return response.value.map(mapToItem);
+  }
+}
+
+// PnPjs integration (preferred over raw REST)
+import { spfi, SPFx } from "@pnp/sp";
+import "@pnp/sp/lists";
+import "@pnp/sp/items";
+
+const sp = spfi().using(SPFx(this.context));
+const items = await sp.web.lists.getByTitle("Tasks").items
+  .select("Title", "Status", "DueDate")
+  .filter("Status eq 'Active'")
+  .top(100)();
+```
+
+---
+
+## 8. Migration Patterns
+
+### Migration Decision Tree
+```
+Source → Tool → Target:
+  File shares → SharePoint Migration Tool (SPMT) or Migration Manager → SPO
+  On-prem SP → SPMT / Sharegate / AvePoint → SPO
+  Google Drive → Migration Manager → SPO/OneDrive
+  Box/Dropbox → Mover (Microsoft) → SPO/OneDrive
+  
+Pre-migration:
+  1. Inventory: File count, size, path lengths (>400 char = problem)
+  2. Cleanup: Delete ROT (redundant, obsolete, trivial)
+  3. Permissions mapping: AD groups → M365 groups
+  4. URL mapping: Old paths → new site/library structure
+  5. Content type planning: What metadata to add during migration
+  
+Post-migration:
+  1. Validation: Row counts, spot-check permissions
+  2. Redirect: URL redirect from old → new
+  3. Training: User adoption (SharePoint ≠ file share)
+  4. Monitoring: Search coverage, broken links, permission escalations
+```
+
+---
+
+## 9. Integration with Power Platform
+
+### SharePoint + Power Automate
+```
+Trigger: "When an item is created or modified"
+  - Use trigger conditions to filter (reduce flow runs):
+    @equals(triggerBody()?['Status']?['Value'], 'Submitted')
+  - Handles: Approval workflows, notifications, data sync, document generation
+
+Common pattern: Document approval
+  1. User uploads to library
+  2. Flow triggers on new item
+  3. Start approval (Teams adaptive card)
+  4. On approve: Set metadata "Approved", move to final library
+  5. On reject: Notify author, set "Rejected"
+```
+
+### SharePoint + Power Apps
+```
+// Custom form for SharePoint list
+SharePoint list → Customize forms → Opens Power Apps
+// Replace default list forms with canvas app for:
+  - Conditional logic (show/hide fields by role)
+  - Multi-step wizard forms
+  - Cross-list lookups
+  - Rich validation beyond column validation
+  - Signature capture, barcode scanning
+```
+
+---
+
+## Anti-Patterns
+
+**Anti-Pattern 1: Deep Folder Hierarchies for Document Organization**
+Replacing the file-share folder mentality with deep nested folders in SharePoint document libraries.
+Folders break search (metadata can't filter across folder boundaries without KQL), prevent retention
+policy targeting, and force users to know where something lives rather than filtering by what it is.
+Fix: Use metadata (site columns, content types) for organization. Documents live in a flat library
+organized by metadata. Views filter and group by metadata instead of folder structure.
+
+**Anti-Pattern 2: Breaking Inheritance at the Item Level**
+Setting unique permissions on individual items or folders within a library. Every unique permission
+assignment creates a new "security scope" that SharePoint must check on every access request. Libraries
+with thousands of uniquely-permissioned items perform poorly and are impossible to audit.
+Fix: Break inheritance at the site level, almost never below. If item-level access control is required,
+use Dataverse (which handles row-level security natively) rather than SharePoint.
+
+**Anti-Pattern 3: Lists Growing Past 5,000 Items Without Index Strategy**
+Allowing SharePoint lists to grow without creating indexes on the columns used in views and filters.
+Past 5,000 items, SharePoint blocks queries on un-indexed columns entirely — views stop loading.
+Fix: Add indexes proactively on every column used in a default view, a filter, a sort, or a group-by.
+This is not optional maintenance — it must be done before list reaches 3,000 items as a buffer.
+
+---
+
+## Quality Gates
+
+- [ ] Information architecture uses metadata (site columns + content types), not folders
+- [ ] Permission inheritance broken only at site level (not library, folder, or item)
+- [ ] Indexes created on all columns used in views, filters, sorts, and group-bys
+- [ ] Lists >1,000 items have threshold management strategy documented
+- [ ] Hub site association configured for all sites belonging to a department/portfolio
+- [ ] Retention policies configured for any content type with compliance requirements
+
+---
+
+## Failure Modes and Fallbacks
+
+**Failure: List view threshold exceeded — views fail to load**
+Detection: Users see "This view cannot be displayed because it exceeds the list view threshold
+of 5,000 items" error.
+Fallback: Add indexes on the columns used in the failing view filters immediately. Create an
+indexed view that filters to a subset of items (e.g., only active items, only current year). For
+very large lists, consider migrating to Dataverse which has no arbitrary row threshold for querying.
+
+**Failure: Managed metadata term store mismatch after site migration**
+Detection: Managed metadata columns show "Invalid" or term IDs don't resolve to display values after
+migration.
+Fallback: This occurs when the term store GUID in the source doesn't match the target. Export the
+term store from source, import to target, then use PnP PowerShell to remap the site column to the
+new term set GUID. Never manually edit term store GUIDs.
+
+---
+
+## Composability
+
+**Hands off to:**
+- `power-automate` — SharePoint events are the most common Power Automate trigger; approval workflows built on top
+- `m365-integration` — Graph API provides the preferred programmatic access path for SharePoint
+
+**Receives from:**
+- `m365-integration` — Graph API authentication patterns for SharePoint REST/Graph access
+- `power-platform-admin` — governance policies for site creation, sharing, and external access

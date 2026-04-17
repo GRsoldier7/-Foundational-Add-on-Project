@@ -1,6 +1,6 @@
 # Foundation AddOn -- Skills Reference
 
-A categorized catalog of all 60+ skills shipped with the Foundation AddOn Project. Use this as a quick-lookup guide to find the right skill for any task.
+A categorized catalog of the portable and synced skills shipped with the Foundation AddOn Project. Use this as a quick-lookup guide to find the right skill for any task.
 
 ---
 
@@ -116,7 +116,59 @@ CC = Claude Code, Codex = OpenAI Codex / Opencode, OC = Other clients (Cursor, e
 | consulting-operations | AI consulting ops, client management | "consulting", "client" | CC |
 | ai-agentic-specialist | Agentic architecture, agent design patterns | "AI agents", "agentic" | CC |
 
-### Tech Stack Skills -- `skills/tech/` (25 skills)
+### Growth Skills -- `skills/growth/`
+
+| Skill | Purpose | Trigger | Platform |
+|-------|---------|---------|----------|
+| marketing-strategist | Positioning, messaging hierarchy, channel strategy | "marketing strategy", "positioning" | CC |
+| copywriting-conversion | Landing pages, offers, and conversion copy | "copy", "landing page", "sales copy" | CC |
+| content-marketing-machine | SEO, content systems, newsletter engines | "content strategy", "SEO", "newsletter" | CC |
+| social-media-architect | Platform-specific social strategy | "social media", "LinkedIn", "TikTok" | CC |
+| growth-hacking-engine | PLG, viral loops, activation, retention | "growth", "viral", "referral" | CC |
+| personal-brand-builder | Thought leadership and authority-building systems | "personal brand", "thought leadership" | CC |
+| sales-closer | Discovery, objections, and deal progression | "sales process", "close deals" | CC |
+| community-builder | Community flywheels and engagement design | "community", "Discord", "audience" | CC |
+| professional-communicator | Professional writing, presentations, and email craft | "email", "presentation", "communicate this" | CC |
+
+### Product Skills -- `skills/product/`
+
+| Skill | Purpose | Trigger | Platform |
+|-------|---------|---------|----------|
+| micro-saas-builder | Niche SaaS validation and MVP path | "micro SaaS", "SaaS idea" | CC |
+| ai-business-optimizer | AI-first operating systems for businesses | "AI ops", "automate my business" | CC |
+| biohacking-data-pipeline | Health and biomarker data systems | "biohacking data", "health pipeline" | CC |
+| brand-website-strategy | Brand systems and website positioning | "brand strategy", "website strategy" | CC |
+| cloud-migration-playbook | Local/self-hosted to cloud migration patterns | "cloud migration", "move to GCP" | CC |
+| health-biohacking-protocol | Health protocol interpretation and planning | "health protocol", "supplements", "blood work" | CC |
+
+### Faith Skills -- `skills/faith/`
+
+| Skill | Purpose | Trigger | Platform |
+|-------|---------|---------|----------|
+| bible-study-theologian | Exegesis and theological analysis | "Bible study", "theology", "exegesis" | CC |
+| faith-life-integration | Applying faith to practical decisions | "faith and work", "Christian decision" | CC |
+| sunday-school-teacher | Lesson planning and curriculum design | "Sunday school", "lesson plan" | CC |
+
+### Legal-Financial Skills -- `skills/legal-financial/`
+
+| Skill | Purpose | Trigger | Platform |
+|-------|---------|---------|----------|
+| startup-tax-strategist | US founder tax structure, deductions, and planning | "business taxes", "LLC vs S-corp", "quarterly taxes" | CC |
+
+### Microsoft Skills -- `skills/microsoft/`
+
+| Skill | Purpose | Trigger | Platform |
+|-------|---------|---------|----------|
+| power-bi | DAX, semantic models, reporting architecture | "Power BI", "DAX", "reporting" | CC |
+| power-apps | Canvas/model-driven app implementation | "Power Apps", "Power Fx" | CC |
+| power-automate | Cloud flows, approvals, automation logic | "Power Automate", "flow" | CC |
+| sharepoint | SharePoint architecture, lists, and governance | "SharePoint", "site", "list" | CC |
+| copilot-studio | Copilot Studio bots and plugin actions | "Copilot Studio", "bot" | CC |
+| power-platform-admin | Environment governance and DLP | "Power Platform admin", "DLP" | CC |
+| microsoft-dataverse | Dataverse schema, security, and API patterns | "Dataverse", "FetchXML" | CC |
+| m365-integration | Graph API and cross-service Microsoft 365 integration | "Microsoft Graph", "M365 integration" | CC |
+
+### Tech Stack Skills -- `skills/tech/`
 
 Framework-specific skills. Invoke by naming the technology (e.g., "build a FastAPI endpoint", "optimize this SQL").
 
@@ -148,7 +200,7 @@ Framework-specific skills. Invoke by naming the technology (e.g., "build a FastA
 | data-storytelling | Data storytelling and visualization |
 | senior-data-engineer | Senior data engineer practices |
 
-### gstack Skills -- `skills/gstack/` (34 skills from garrytan/gstack)
+### gstack Skills -- `skills/gstack/`
 
 A virtual engineering team from Y Combinator CEO Garry Tan's battle-tested Claude Code setup.
 
@@ -190,7 +242,7 @@ A virtual engineering team from Y Combinator CEO Garry Tan's battle-tested Claud
 | setup-deploy | Configure deployment pipeline |
 | connect-chrome | Connect to existing Chrome instance |
 
-### Community Skills -- `.claude/skills/` (5 from ctx7)
+### Community Skills -- `.claude/skills/`
 
 | Skill | Source | Purpose |
 |-------|--------|---------|

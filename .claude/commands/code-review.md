@@ -13,7 +13,7 @@ metadata:
   author: aaron-deyoung
   version: "1.0"
   domain-category: engineering
-  adjacent-skills: testing-strategy, database-design, security-hardening
+  adjacent-skills: testing-strategy, database-design, app-security-architect
   last-reviewed: "2026-03-15"
   review-trigger: "New OWASP Top 10 release, major Python/TypeScript version change"
   capability-assumptions:
@@ -211,7 +211,7 @@ wrong approach" with "this code has a bug."
 **Hands off to:**
 - `testing-strategy` — when review reveals missing test coverage for a critical path
 - `database-design` — when review reveals schema or query design issues
-- `security-hardening` — when a Critical security finding requires more than a quick fix
+- `app-security-architect` — when a Critical security finding requires more than a quick fix
 
 **Receives from:**
 - `polychronos-team` — when QA Director or Sentinel delegates a review to this skill

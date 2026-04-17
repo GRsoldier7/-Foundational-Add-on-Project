@@ -28,7 +28,7 @@ metadata:
   last-reviewed: "2026-03-21"
   review-trigger: "New skill added to library, user reports skill should have triggered but didn't"
   capability-assumptions:
-    - "Access to all skills in the Master_Skills library"
+    - "Access to all skills shipped in this Foundation AddOn workspace"
     - "Skill tool available for invoking skills"
   fallback-patterns:
     - "If skill not found: recommend building it with skill-amplifier"
@@ -52,7 +52,7 @@ metadata:
 |-------|------------|----------|
 | `anti-hallucination` | Every response with factual claims | Background — always active |
 | `prompt-amplifier` | Every user prompt (silent mode) | Background — always active |
-| `token-optimizer` | Every call — lean, efficient token usage | Background — always active |
+| `efficiency-engine` | Every call — lean, efficient token usage | Background — always active |
 | `master-orchestrator` | Every request (routing) | Background — always active |
 | `session-optimizer` | Session start, context management | Background at 40%+ context |
 | `skill-amplifier` | Skill creation or optimization | On-demand |

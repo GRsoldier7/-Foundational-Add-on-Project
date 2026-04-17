@@ -1,9 +1,14 @@
 # Claude Code local settings (machine-specific, not shared)
 .claude/settings.local.json
+.codex
 
 # OS files
 .DS_Store
 Thumbs.db
+**/.__*
+**/._*
+*.swp
+*.swo
 
 # Node
 node_modules/
