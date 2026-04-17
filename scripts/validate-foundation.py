@@ -126,7 +126,12 @@ def check_repo_strings() -> None:
             continue
         if path.suffix in {".png", ".jpg", ".jpeg", ".gif", ".pdf", ".pyc"}:
             continue
-        text = path.read_text(errors="ignore")
+        if path.name.startswith(".__") or path.name.startswith("._"):
+            continue
+        try:
+            text = path.read_text(errors="ignore")
+        except FileNotFoundError:
+            continue
         if legacy_playwright in text:
             error(f"{path.relative_to(ROOT)} still references the legacy Playwright MCP package")
 
