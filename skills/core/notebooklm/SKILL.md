@@ -2,73 +2,122 @@
 name: notebooklm
 description: |
   Complete programmatic access to Google NotebookLM via the notebooklm-py CLI.
-  Creates notebooks, adds sources (URLs, YouTube, PDFs, audio, video, images), generates
-  all artifact types (podcast, video, quiz, flashcards, slide deck, infographic, mind map,
-  report), downloads results, and supports web research and chat.
+  Creates notebooks, adds sources (URLs, YouTube, PDFs, audio, video, images, text),
+  generates all artifact types (podcast, video, quiz, flashcards, slide deck, infographic,
+  mind map, report), downloads results, and supports web research and chat.
 
-  EXPLICIT TRIGGER on: "/notebooklm", "create a podcast about", "audio overview", "generate
-  a quiz from", "summarize these URLs", "NotebookLM", "add to notebooklm", "flashcards for
-  studying", "turn this into a podcast", "create flashcards", "generate a slide deck",
-  "make an infographic", "create a mind map", "install notebooklm", "add notebooklm to cowork",
-  "briefing doc", "study guide from", "deep dive podcast".
+  CORE USE: Automated working-memory backup system — backs up short-term memory, long-term
+  memory, lessons learned, and error logs to a dedicated NotebookLM notebook. Triggers
+  automatically at session end (Stop hook) and when context window reaches 60%.
 
-  Also activates on: "create a podcast about X", "I want to study this material", "can you
-  summarize these documents into something I can listen to", "make this into audio content".
-compatibility: Requires notebooklm-py CLI installed; Google account authenticated; Python 3.10+
+  EXPLICIT TRIGGER on: "/notebooklm", "/backup-memory", "create a podcast about",
+  "audio overview", "generate a quiz from", "summarize these URLs", "NotebookLM",
+  "add to notebooklm", "flashcards for studying", "turn this into a podcast",
+  "create flashcards", "generate a slide deck", "make an infographic", "create a mind map",
+  "install notebooklm", "briefing doc", "study guide from", "deep dive podcast",
+  "backup memory", "save working memory", "context is getting full", "60% context".
+
+compatibility: Requires notebooklm-py CLI installed at ~/.notebooklm-venv; Google account
+  authenticated via nlm_login.py; Python 3.10+
 metadata:
   author: aaron-deyoung
-  version: "3.0"
+  version: "4.0"
   domain-category: core
   adjacent-skills: knowledge-management, data-storytelling, session-optimizer
-  last-reviewed: "2026-04-17"
-  review-trigger: "notebooklm-py version bump, auth flow changes, new artifact type or memory workflow updates"
+  last-reviewed: "2026-04-19"
+  review-trigger: "notebooklm-py version bump, auth flow changes, new artifact type, memory workflow updates"
 allowed-tools: Bash
 ---
 
 ## Composability Contract
-- Input expects: topic, URLs, files, or research query to process
-- Output produces: notebooks, sources, generated artifacts (audio, quiz, slides, etc.)
+- Input expects: topic, URLs, files, research query, OR memory backup trigger
+- Output produces: notebooks, sources, generated artifacts (audio, quiz, slides, etc.), memory backups
 - Hands off to: knowledge-management (vault organization), data-storytelling (artifact framing)
-- Receives from: any skill needing to transform content into audio/visual/study material
+- Receives from: any skill needing content → audio/visual/study material, or session end hooks
+
+---
+
+## Venv Activation Helper
+
+All commands use this prefix (macOS/Linux):
+```bash
+NLM="source $HOME/.notebooklm-venv/bin/activate && notebooklm"
+```
+
+---
+
+## Working Memory Backup System
+
+### ⚠️ ONE NOTEBOOK RULE
+There is exactly **one** NotebookLM notebook for ALL projects and ALL memory tiers.
+Never create a second notebook. Never create per-project notebooks.
+All sources are distinguished by their timestamped title (e.g. "Gmail Lessons — 2026-04-19 12:27").
+
+**Notebook ID** (the single source of truth):
+```bash
+# ~/.claude/nlm-notebook-ids.env
+NLM_WORKING_MEMORY_NOTEBOOK_ID="283d88be-c73d-4b3f-bb22-4af6f7437dd9"
+```
+Name: **"AI Working Memory — Claude Projects"**
+
+### Four Memory Tiers + Source Naming Convention
+
+**Every source title MUST follow this format:**
+```
+YYYY-MM-DD HH:MM | [TYPE] [Project] — [Topic]
+```
+
+Examples:
+- `2026-04-19 12:27 | LT-Memory Gmail — Inbox System Architecture`
+- `2026-04-19 12:27 | Session Gmail — Backfill 3100 Emails Completed`
+- `2026-04-19 12:27 | Lesson Gmail — Gmail Filter API 1-Label Limit`
+- `2026-04-19 12:27 | Error n8n — Article Processor S3 Queue Failure`
+- `2026-04-19 12:27 | ST-Memory Global — Session Wrapup`
+- `2026-04-19 12:27 | Ref Global — NotebookLM Auth Expiry Pattern`
+
+| Tier | Prefix | Source | Frequency |
+|------|--------|--------|-----------|
+| Short-term | `ST-Memory` | `/tmp/claude-session-*.md` + conversation summary | Every session Stop |
+| Long-term | `LT-Memory` | `~/.claude/projects/*/memory/*.md` | Every session Stop |
+| Lessons Learned | `Lesson` | `lessons-*.md`, `feedback_*.md`, error patterns | Every session Stop |
+| Errors | `Error` | `~/.claude/scripts/nlm-error.log` + hook failures | Every session Stop |
+| Reference | `Ref` | Architecture docs, system configs | On change |
+| Session Summary | `Session` | End-of-session accomplishment summaries | Every session Stop |
+
+### 60% Context Trigger
+The Stop hook fires after EVERY Claude response. This is the 60% proxy — the backup runs
+before context is lost to compaction. The `nlm-backup.sh` script uses file timestamps to
+only upload CHANGED files (deduplication via SHA256 hash tracking).
 
 ---
 
 ## CLI Operator Mode
 
-Operate NotebookLM as a deterministic CLI workflow, not an ad-hoc chat tool:
-
-1. **Preflight:** `auth check`, venv activation, context selection.
+1. **Preflight:** auth check, venv activation, context selection.
 2. **Ingest:** add sources with stable titles + wait for READY.
 3. **Generate:** one artifact at a time with explicit instructions.
 4. **Verify:** wait for completion, download, size-check output.
-5. **Persist memory:** append concise outcomes to project memory.
-
-Operator mode requires command-by-command state tracking: notebook id, source ids, artifact ids,
-and output paths must be captured after every step.
+5. **Persist memory:** append concise outcomes to project memory file.
 
 ---
 
 ## NotebookLM Memory Lifecycle
 
-Use this lifecycle for all non-trivial NotebookLM runs:
-
 ### 1. Capture
 - Topic, objective, audience, and success criteria.
-- Source list (URLs/files) and trust level notes.
+- Source list (URLs/files) and trust-level notes.
 
 ### 2. Distill
 - Artifact outputs (podcast, slides, quiz) with one-line usefulness summary.
-- Key claims that need citation or follow-up verification.
+- Key claims needing citation or follow-up verification.
 
 ### 3. Store
-- Save a compact session summary in `.ai-memory/project-profile.md` or a linked run log.
-- Keep only durable facts and decisions, not raw transcript dumps.
+- Save compact session summary in `.ai-memory/` or linked run log.
+- Keep only durable facts/decisions, not raw transcript dumps.
 
 ### 4. Rehydrate
 - Before next run, read prior memory and reuse notebook where continuity helps.
-- If context diverged, create a new notebook and link the previous one.
-
-Memory lifecycle prevents repeat ingestion and makes recurring workflows reliable.
+- If context diverged, create new notebook and link to previous one.
 
 ---
 
@@ -77,64 +126,28 @@ Memory lifecycle prevents repeat ingestion and makes recurring workflows reliabl
 1. **Auth is fragile** — Google cookies expire 7–30 days. Always `notebooklm auth check` first.
 2. **Context required** — Every command except `list`/`create` needs `notebooklm use <id>`.
 3. **Sources must be READY** — Wait with `source wait <id>` before generating.
-4. **Generation is async** — Audio 10–20 min, video 15–45 min. Use `artifact wait`.
+4. **Generation is async** — Prefer `--wait` flag for blocking inline completion. For non-blocking, use `artifact wait <id>`. Audio 10–20 min, video 15–45 min.
 5. **No parallel generation** — Google rate-limits per notebook. Sequential only.
-6. **Windows encoding** — Prefix ALL commands with `PYTHONIOENCODING=utf-8 PYTHONUTF8=1`.
+6. **Deduplication** — Hash-check files before upload. Never re-upload unchanged content.
+7. **Graceful degradation** — If auth fails, write backup to local file; alert user.
 
 ---
 
 ## Environment Setup
 
-**CRITICAL on Windows:** Every `notebooklm` command MUST be prefixed:
-```bash
-source "$HOME/.notebooklm-venv/Scripts/activate" && PYTHONIOENCODING=utf-8 PYTHONUTF8=1 notebooklm <command>
-```
-
-### First-Time Install
+### Install (one-time)
 ```bash
 python3 -m venv ~/.notebooklm-venv
-source ~/.notebooklm-venv/Scripts/activate  # or bin/activate on Linux/Mac
+source ~/.notebooklm-venv/bin/activate
 pip install "notebooklm-py[browser]" && playwright install chromium
 ```
 
 ### Authentication
-Claude writes and runs a Playwright login script automatically — user only signs in to Google:
-```python
-# nlm_login.py — auto-detects login completion
-import asyncio, json, os
-from pathlib import Path
-from playwright.async_api import async_playwright
-
-STORAGE_DIR = Path.home() / ".notebooklm"
-STORAGE_FILE = STORAGE_DIR / "storage_state.json"
-
-async def main():
-    STORAGE_DIR.mkdir(exist_ok=True)
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
-        context = await browser.new_context()
-        page = await context.new_page()
-        await page.goto("https://notebooklm.google.com/")
-        print("Sign in to Google in the Chrome window.")
-        try:
-            await page.wait_for_selector(
-                "mat-sidenav-container, notebook-list, .notebooks-container",
-                timeout=300_000)
-        except Exception:
-            for _ in range(150):
-                if "notebooklm.google.com" in page.url and "accounts.google.com" not in page.url:
-                    break
-                await asyncio.sleep(2)
-        await asyncio.sleep(3)
-        storage = await context.storage_state()
-        STORAGE_FILE.write_text(json.dumps(storage, indent=2))
-        print(f"Session saved to {STORAGE_FILE}")
-        await browser.close()
-
-asyncio.run(main())
+```bash
+source ~/.notebooklm-venv/bin/activate && python3 ~/.claude/skills/notebooklm/nlm_login.py
 ```
-
-**NEVER** use `notebooklm login` directly — it requires interactive terminal input unavailable in Claude Code.
+Claude writes and runs the Playwright login script — user only signs in to Google.
+**NEVER** use `notebooklm login` directly — requires interactive terminal unavailable in Claude Code.
 
 ---
 
@@ -147,28 +160,41 @@ asyncio.run(main())
 | Create notebook | `notebooklm create "Title"` |
 | Set context | `notebooklm use <id>` |
 | Add URL source | `notebooklm source add "https://..."` |
-| Add file source | `notebooklm source add ./file.pdf` |
-| Add inline text | `notebooklm source add "text content" --type text --title "Name"` |
-| Research topic | `notebooklm source add-research "query" --mode deep --no-wait` |
+| Add file source | `notebooklm source add ./file.md` |
+| Add inline text | `notebooklm source add "text" --type text --title "Name"` |
+| Research (blocking) | `notebooklm source add-research "query" --mode deep --import-all` |
+| Research (non-blocking) | `notebooklm source add-research "query" --mode deep --no-wait` |
+| Wait for research | `notebooklm research wait --import-all --timeout 300` |
 | Chat with sources | `notebooklm ask "question"` |
-| Generate podcast | `notebooklm generate audio "instructions"` |
-| Generate quiz | `notebooklm generate quiz --difficulty medium` |
-| Generate slides | `notebooklm generate slide-deck --format detailed` |
+| Generate podcast (blocking) | `notebooklm generate audio "instructions" --wait` |
+| Generate podcast (debate) | `notebooklm generate audio "instructions" --format debate --wait` |
+| Generate quiz | `notebooklm generate quiz --difficulty medium --wait` |
+| Generate slides | `notebooklm generate slide-deck --format detailed --wait` |
+| Generate briefing doc | `notebooklm generate briefing --wait` |
+| Generate FAQ | `notebooklm generate faq --wait` |
+| Wait for artifact | `notebooklm artifact wait <id>` |
 | Download artifact | `notebooklm download audio ./out.mp3` |
+| Backup memory | `~/.claude/scripts/nlm-backup.sh` |
 
 ---
 
 ## Standard Workflows
 
-### Research-to-Podcast
+### Working Memory Backup (automated)
+```bash
+~/.claude/scripts/nlm-backup.sh [project_dir]
+# Runs automatically via Stop hook. Backs up all memory tiers.
+```
+
+### Research-to-Podcast (recommended — blocking, agent-safe)
 ```bash
 notebooklm auth check
 notebooklm create "Research: [topic]"
 notebooklm use <id>
-notebooklm source add "https://..."     # for each URL
-notebooklm source wait <source_id>      # wait for processing
-notebooklm generate audio "Focus on key decisions"
-notebooklm artifact wait <artifact_id>
+notebooklm source add "https://..."          # seed source
+notebooklm source add-research "topic" --mode deep --no-wait  # start research
+notebooklm research wait --import-all --timeout 300           # wait + import
+notebooklm generate audio "Focus on key decisions" --wait     # blocking generation
 notebooklm download audio ./podcast.mp3
 ```
 
@@ -179,15 +205,6 @@ notebooklm use <brain_notebook_id>
 notebooklm source add "/path/to/session-summary.md"
 ```
 
-### Multi-Format from One Notebook
-```bash
-notebooklm generate audio "Executive summary"    # sequential only
-notebooklm artifact wait <id>
-notebooklm generate quiz --difficulty hard
-notebooklm artifact wait <id>
-notebooklm generate slide-deck --format presenter
-```
-
 ---
 
 ## Edge Cases
@@ -195,23 +212,25 @@ notebooklm generate slide-deck --format presenter
 | Case | Symptom | Fix |
 |------|---------|-----|
 | Auth expired | SID cookie missing | Re-run nlm_login.py |
-| Source stuck PROCESSING | >10 min in processing state | Delete and re-add; DRM PDFs fail silently |
+| Source stuck PROCESSING | >10 min in processing | Delete and re-add; DRM PDFs fail silently |
 | Generation 429 | Rate limit error | Wait 10–20 min; never retry within 2 min |
-| Download fails | Artifact shows completed | Check file extension matches type (audio→.mp3) |
-| CLI not found | `command not found` | Activate venv or use full path |
-| RPC error on `use` | "RPC returned null" | Notebook may not exist; try `notebooklm list` |
+| Download fails | Artifact shows completed | Check file extension matches type |
+| CLI not found | `command not found` | Activate venv: `source ~/.notebooklm-venv/bin/activate` |
+| RPC error on `use` | "RPC returned null" | Notebook may not exist; run `notebooklm list` |
 | Source add fails | "Failed to get SOURCE_ID" | Create new notebook with `-n <id>` flag |
+| Backup hook fails | Auth expired at session end | Write fallback to `~/.claude/nlm-backup-pending/` |
 
 ---
 
 ## Anti-Patterns
 
 1. **Running `notebooklm login` directly** — requires interactive input. Use nlm_login.py.
-2. **Missing PYTHONIOENCODING on Windows** — causes UnicodeEncodeError. Always prefix.
-3. **Generating before sources are READY** — silently produces incomplete output.
-4. **Parallel generations** — both fail with 429. Always sequential.
+2. **Generating before sources are READY** — silently produces incomplete output.
+3. **Parallel generations** — both fail with 429. Always sequential.
+4. **Re-uploading unchanged files** — wastes quota. Always hash-check first.
 5. **Embedding full storage_state.json in Co-work** — wastes ~1,700 tokens. Strip to 3 domains.
 6. **Asking user to run commands** — skill must be fully automated. User only signs in to Google.
+7. **Ignoring graceful degradation** — if backup fails, always log error + write local fallback.
 
 ---
 
@@ -222,18 +241,21 @@ notebooklm generate slide-deck --format presenter
 - [ ] All sources confirmed READY before generating
 - [ ] Artifact confirmed COMPLETED before downloading
 - [ ] Download file exists and is non-zero bytes
-- [ ] Operator state tracked (`notebook_id`, `source_ids`, `artifact_ids`, output paths)
-- [ ] Memory lifecycle completed (capture -> distill -> store -> rehydrate)
+- [ ] Operator state tracked (notebook_id, source_ids, artifact_ids, output paths)
+- [ ] Memory lifecycle completed (capture → distill → store → rehydrate)
+- [ ] Hash deduplication prevents re-uploading unchanged files
+- [ ] Graceful degradation: local fallback written if NLM unavailable
 - [ ] Auth flow was fully automated — user only signed in to Google
 
 ---
 
 ## Self-Evaluation
 
-Before presenting any NotebookLM workflow:
-[ ] Did I prefix all commands with PYTHONIOENCODING=utf-8 on Windows?
-[ ] Did I check auth before starting?
-[ ] Did I set notebook context with `use`?
-[ ] Am I waiting for sources before generating?
-[ ] Am I generating sequentially, not in parallel?
-[ ] Am I handling the case where `use` fails with RPC error?
+Before any NotebookLM workflow:
+- [ ] Auth check passed?
+- [ ] Notebook context set with `use`?
+- [ ] Waiting for sources before generating?
+- [ ] Generating sequentially, not in parallel?
+- [ ] Hash-checking before re-upload?
+- [ ] RPC error handling in place?
+- [ ] Local fallback configured?
