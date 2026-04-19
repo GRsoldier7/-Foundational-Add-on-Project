@@ -47,6 +47,9 @@ mcp.json
 # Memory (session-specific)
 .memory/
 
+# Git worktrees (local development only)
+.worktrees/
+
 # Vaultwarden runtime data (NEVER commit)
 vaultwarden/.env
 vaultwarden/vw-data/
