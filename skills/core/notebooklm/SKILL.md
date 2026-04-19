@@ -21,7 +21,7 @@ compatibility: Requires notebooklm-py CLI installed at ~/.notebooklm-venv; Googl
   authenticated via nlm_login.py; Python 3.10+
 metadata:
   author: aaron-deyoung
-  version: "4.0"
+  version: "4.2"
   domain-category: core
   adjacent-skills: knowledge-management, data-storytelling, session-optimizer
   last-reviewed: "2026-04-19"
