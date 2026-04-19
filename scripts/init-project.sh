@@ -455,16 +455,20 @@ write_file "$TARGET/.foundation-sync.json" "$SYNC_MANIFEST" "Sync tracking manif
 if ! $SKIP_MCP && ! $DRY_RUN && [[ ! -f "$TARGET/.mcp.json" ]]; then
     section "MCP Server Setup"
     echo ""
-    echo "The Foundation AddOn recommends these MCP servers (Tier 1, zero API keys):"
-    echo "  1. Context7    — live library docs"
-    echo "  2. Filesystem  — sandboxed file ops"
-    echo "  3. Git         — native git operations"
-    echo "  4. Playwright  — browser automation"
-    echo "  5. Memory      — persistent knowledge graph"
-    echo "  6. Fetch       — URL to markdown"
-    echo "  7. Sequential Thinking — structured problem-solving"
+    echo "Foundation AddOn Tier 1 MCP servers (zero API keys):"
     echo ""
-    read -rp "Generate .mcp.json with Tier 1 servers? [Y/n] " MCP_RESPONSE
+    echo "  Auto-scaffolded (no path config needed):"
+    echo "    context7           — live library docs"
+    echo "    playwright         — browser automation"
+    echo "    fetch              — URL to markdown"
+    echo "    sequential-thinking — structured problem-solving"
+    echo ""
+    echo "  Require manual path config (see mcp-config/recommended-servers.json):"
+    echo "    filesystem  — needs allowed directory paths"
+    echo "    git         — needs --repository /path/to/project"
+    echo "    memory      — needs MEMORY_FILE_PATH env var"
+    echo ""
+    read -rp "Generate .mcp.json with the 4 auto-scaffoldable servers? [Y/n] " MCP_RESPONSE
     if [[ "${MCP_RESPONSE:-Y}" =~ ^[Yy] ]]; then
         MCP_JSON=$(cat <<'MCPJSON'
 {
@@ -489,10 +493,11 @@ if ! $SKIP_MCP && ! $DRY_RUN && [[ ! -f "$TARGET/.mcp.json" ]]; then
 }
 MCPJSON
 )
-        write_file "$TARGET/.mcp.json" "$MCP_JSON" "MCP server config"
+        write_file "$TARGET/.mcp.json" "$MCP_JSON" "MCP server config (4 of 7 Tier 1 servers)"
         warn "Add .mcp.json to your .gitignore (may contain credentials later)"
+        info "Manually add filesystem, git, memory servers — see mcp-config/recommended-servers.json"
     else
-        info "Skipping MCP setup. Create .mcp.json manually when ready."
+        info "Skipping MCP setup. See mcp-config/recommended-servers.json to create .mcp.json manually."
     fi
 fi
 
