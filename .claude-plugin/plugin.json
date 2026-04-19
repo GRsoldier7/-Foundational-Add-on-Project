@@ -1,0 +1,18 @@
+{
+  "name": "foundation-addon",
+  "version": "0.1.0",
+  "description": "LLM-agnostic skill library and MCP configuration — write once, generate anywhere",
+  "author": "GRsoldier7",
+  "homepage": "https://github.com/GRsoldier7/foundation-addon",
+  "entry": "packages/runner/src/cli.ts",
+  "capabilities": ["skills", "mcp-config", "permissions"],
+  "skills_dir": "packages/canonical/skills",
+  "config_dir": "packages/config",
+  "commands": {
+    "generate": "Compile canonical skills to provider artifacts",
+    "install": "Install generated artifacts to provider tool directories",
+    "validate": "Validate all spec.yaml and core.md files",
+    "doctor": "Run environment health checks"
+  },
+  "min_claude_code_version": "1.0.0"
+}

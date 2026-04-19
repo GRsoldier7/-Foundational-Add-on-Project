@@ -1,0 +1,8 @@
+{
+  "name": "Foundation AddOn — LLM-Agnostic",
+  "short_description": "Write skills once. Generate for Claude, Codex, Qwen, and Gemini.",
+  "category": "productivity",
+  "tags": ["skills", "llm-agnostic", "mcp", "multi-provider", "code-review", "debugging"],
+  "screenshots": [],
+  "license": "MIT"
+}

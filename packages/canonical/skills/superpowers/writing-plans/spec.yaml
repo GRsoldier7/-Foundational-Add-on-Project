@@ -1,0 +1,27 @@
+spec_version: "1.0"
+name: writing-plans
+version: "1.0.0"
+description: "Create granular TDD implementation plans with exact file paths and complete code for every step"
+tier: superpowers
+depends_on:
+  - superpowers/brainstorming
+capabilities:
+  - context_analysis
+  - code_generation
+provider_hints:
+  claude:
+    system_prefix: "Be extremely specific. No placeholders. Complete code in every step. Exact file paths always."
+    model: claude-opus-4-6
+    max_tokens: 16384
+  codex:
+    model: o4-mini
+trust_tier: T1
+tags:
+  - planning
+  - tdd
+  - implementation
+  - tasks
+composable: false
+parallel_safe: false
+streaming: false
+author: foundation-addon

@@ -1,0 +1,18 @@
+{
+  "name": "@foundation-addon/runner",
+  "version": "0.1.0",
+  "bin": { "foundation-addon": "src/cli.ts" },
+  "private": true,
+  "dependencies": {
+    "@foundation-addon/adapters": "workspace:*",
+    "ajv": "^8.17.1",
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.5"
+  }
+}
